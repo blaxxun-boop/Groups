@@ -127,18 +127,13 @@ public class Groups : BaseUnityPlugin
 	{
 		private static void Postfix(Minimap __instance)
 		{
-			if (ownGroup is null)
-			{
-				return;
-			}
-
 			for (int index = 0; index < __instance.m_tempPlayerInfo.Count; ++index)
 			{
 				Minimap.PinData playerPin = __instance.m_playerPins[index];
 				ZNet.PlayerInfo playerInfo = __instance.m_tempPlayerInfo[index];
 				if (playerPin.m_name == playerInfo.m_name)
 				{
-					playerPin.m_icon = ownGroup.playerStates.ContainsKey(PlayerReference.fromPlayerInfo(playerInfo)) ? groupMapPinIcon : __instance.GetSprite(Minimap.PinType.Player);
+					playerPin.m_icon = ownGroup?.playerStates.ContainsKey(PlayerReference.fromPlayerInfo(playerInfo)) == true ? groupMapPinIcon : __instance.GetSprite(Minimap.PinType.Player);
 				}
 			}
 		}
