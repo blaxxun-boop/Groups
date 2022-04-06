@@ -5,15 +5,15 @@ namespace Groups;
 
 public class DragNDrop : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 {
-	public Transform target = null!;
+	public RectTransform target = null!;
 	public bool shouldReturn;
 	private bool isMouseDown;
 	private Vector3 startMousePosition;
 	private Vector3 startPosition;
 
-	private void Start()
+	private void Awake()
 	{
-		target = transform;
+		target = (RectTransform)transform;
 	}
 
 	private void Update()
@@ -24,16 +24,24 @@ public class DragNDrop : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 			Vector3 diff = currentPosition - startMousePosition;
 			Vector3 pos = startPosition + diff;
 
-			target.position = pos;
+			SetPosition(pos);
 		}
+	}
+
+	public void SetPosition(Vector3 position)
+	{
+		Vector2 rect = target.sizeDelta;
+		position.x = Mathf.Clamp(position.x, rect.x / 2, Screen.width - rect.x / 2);
+		position.y = Mathf.Clamp(position.y, rect.y / 2, Screen.height - rect.y / 2);
+		target.position = position;
+		Groups.groupInterfaceAnchor.Value = target.localPosition;
 	}
 
 	public void OnPointerDown(PointerEventData dt)
 	{
 		isMouseDown = true;
-		Vector3 position = target.position;
-		Groups.groupInterfaceAnchor.Value = target.localPosition;
-		startPosition = position;
+		startPosition = target.position;
+		target.position = startPosition;
 		startMousePosition = Input.mousePosition;
 	}
 
@@ -43,6 +51,7 @@ public class DragNDrop : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 		if (shouldReturn)
 		{
 			target.position = startPosition;
+			Groups.groupInterfaceAnchor.Value = target.localPosition;
 		}
 	}
 }

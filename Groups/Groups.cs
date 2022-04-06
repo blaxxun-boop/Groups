@@ -15,7 +15,7 @@ namespace Groups;
 public class Groups : BaseUnityPlugin
 {
 	private const string ModName = "Groups";
-	private const string ModVersion = "1.0.0";
+	private const string ModVersion = "1.0.1";
 	private const string ModGUID = "org.bepinex.plugins.groups";
 
 	public static Group? ownGroup;
@@ -104,7 +104,9 @@ public class Groups : BaseUnityPlugin
 	{
 		if (groupMemberFirst is not null)
 		{
-			groupMemberFirst.transform.parent.localPosition = groupInterfaceAnchor.Value;
+			Transform groupRoot = groupMemberFirst.transform.parent;
+			groupRoot.localPosition = groupInterfaceAnchor.Value;
+			groupRoot.GetComponent<DragNDrop>().SetPosition(groupRoot.position);
 		}
 	}
 
@@ -648,7 +650,7 @@ public class Groups : BaseUnityPlugin
 	{
 		private static void Postfix(Hud __instance)
 		{
-			GameObject groups = new("Groups");
+			GameObject groups = new("Groups", typeof(RectTransform));
 			groups.AddComponent<DragNDrop>();
 			groups.transform.SetParent(__instance.m_rootObject.transform);
 			groups.transform.localPosition = groupInterfaceAnchor.Value;
@@ -688,6 +690,7 @@ public class Groups : BaseUnityPlugin
 		private static void Postfix()
 		{
 			Transform groupRoot = groupMemberFirst!.transform.parent;
+			bool wasActive = groupRoot.gameObject.activeSelf;
 			groupRoot.gameObject.SetActive(ownGroup is not null);
 
 			if (ownGroup is null)
@@ -699,6 +702,18 @@ public class Groups : BaseUnityPlugin
 			{
 				GameObject newMember = Instantiate(groupMemberFirst, groupRoot, false);
 				newMember.transform.localPosition = new Vector3(0, -(groupRoot.childCount - 1) * 75);
+				float originalWidth = groupMemberFirst.transform.Find("Health/health_slow").GetComponent<GuiBar>().m_width;
+				newMember.transform.Find("Health/health_slow").GetComponent<GuiBar>().m_firstSet = true;
+				newMember.transform.Find("Health/health_slow").GetComponent<GuiBar>().m_width = originalWidth;
+				newMember.transform.Find("Health/health_fast").GetComponent<GuiBar>().m_firstSet = true;
+				newMember.transform.Find("Health/health_fast").GetComponent<GuiBar>().m_width = originalWidth;
+
+				wasActive = false;
+			}
+
+			if (!wasActive)
+			{
+				groupRoot.GetComponent<DragNDrop>().SetPosition(groupRoot.transform.position);
 			}
 
 			for (int i = 0; i < groupRoot.childCount; ++i)
