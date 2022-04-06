@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Groups", "Groups\Groups.csproj", "{6CDE724A-63F3-4457-91A5-C9CAF71649CE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+		API|Any CPU = API|Any CPU
+		APIStub|Any CPU = APIStub|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6CDE724A-63F3-4457-91A5-C9CAF71649CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6CDE724A-63F3-4457-91A5-C9CAF71649CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6CDE724A-63F3-4457-91A5-C9CAF71649CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6CDE724A-63F3-4457-91A5-C9CAF71649CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6CDE724A-63F3-4457-91A5-C9CAF71649CE}.API|Any CPU.ActiveCfg = API|Any CPU
+		{6CDE724A-63F3-4457-91A5-C9CAF71649CE}.API|Any CPU.Build.0 = API|Any CPU
+		{6CDE724A-63F3-4457-91A5-C9CAF71649CE}.APIStub|Any CPU.ActiveCfg = APIStub|Any CPU
+		{6CDE724A-63F3-4457-91A5-C9CAF71649CE}.APIStub|Any CPU.Build.0 = APIStub|Any CPU
+	EndGlobalSection
+EndGlobal
