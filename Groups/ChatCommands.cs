@@ -1,0 +1,215 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using HarmonyLib;
+using UnityEngine.UI;
+
+namespace Groups;
+
+public static class ChatCommands
+{
+	public static bool groupChatActive = false;
+	private static readonly List<Terminal.ConsoleCommand> terminalCommands = new();
+
+	[HarmonyPatch(typeof(Terminal), nameof(Terminal.InitTerminal))]
+	public class AddChatCommands
+	{
+		private static void Postfix()
+		{
+			terminalCommands.Clear();
+
+			terminalCommands.Add(new Terminal.ConsoleCommand("invite", "invite someone to your group", (Terminal.ConsoleEvent)(args =>
+			{
+				if (args.FullLine.Length < "invite".Length || Chat.instance == null)
+				{
+					return;
+				}
+
+				string playerName = args.FullLine.Substring(7);
+
+				if (string.Compare(playerName, Player.m_localPlayer.GetHoverName(), StringComparison.OrdinalIgnoreCase) == 0)
+				{
+					Chat.instance.AddString("You cannot invite yourself.");
+					return;
+				}
+
+				long targetId = ZNet.instance.m_players.FirstOrDefault(p => string.Compare(playerName, p.m_name, StringComparison.OrdinalIgnoreCase) == 0).m_characterID.m_userID;
+				if (targetId == 0)
+				{
+					Chat.instance.AddString($"{playerName} is not online.");
+					return;
+				}
+
+				if (Groups.ownGroup is null)
+				{
+					Groups.ownGroup = new Group(PlayerReference.fromPlayer(Player.m_localPlayer), Group.PlayerState.fromLocal());
+					API.InvokeGroupJoined();
+				}
+
+				if (Groups.ownGroup.leader == PlayerReference.fromPlayer(Player.m_localPlayer))
+				{
+					ZRoutedRpc.instance.InvokeRoutedRPC(targetId, "Groups InvitePlayer", Player.m_localPlayer.GetHoverName());
+					Chat.instance.AddString($"Sent an invitation to {playerName}.");
+				}
+				else
+				{
+					Chat.instance.AddString("Only the leader of a group can send out invitations.");
+				}
+			}), optionsFetcher: () => ZNet.instance.m_players.Select(p => p.m_name).ToList()));
+
+			terminalCommands.Add(new Terminal.ConsoleCommand("kick", "removes someone from your group", (Terminal.ConsoleEvent)(args =>
+			{
+				if (args.FullLine.Length < "kick".Length || Chat.instance == null)
+				{
+					return;
+				}
+
+				if (Groups.ownGroup is null)
+				{
+					Chat.instance.AddString("You are not in a group.");
+
+					return;
+				}
+
+				if (Groups.ownGroup.leader != PlayerReference.fromPlayer(Player.m_localPlayer))
+				{
+					Chat.instance.AddString("Only the leader of a group can kick members.");
+
+					return;
+				}
+
+				string playerName = args.FullLine.Substring(5);
+
+				if (string.Compare(playerName, Player.m_localPlayer.GetHoverName(), StringComparison.OrdinalIgnoreCase) == 0)
+				{
+					Chat.instance.AddString("You cannot kick yourself. Please use /leave instead.");
+
+					return;
+				}
+
+				if (!Groups.ownGroup.RemoveMember(Groups.ownGroup.playerStates.Keys.FirstOrDefault(p => string.Compare(p.name, playerName, StringComparison.OrdinalIgnoreCase) == 0)))
+				{
+					Chat.instance.AddString($"{playerName} is not in this group.");
+				}
+
+			}), optionsFetcher: () => Groups.ownGroup?.playerStates.Keys.Select(p => p.name).Where(n => n != Player.m_localPlayer.GetHoverName()).ToList() ?? new List<string>()));
+
+			terminalCommands.Add(new Terminal.ConsoleCommand("promote", "promotes someone to group leader", (Terminal.ConsoleEvent)(args =>
+			{
+				if (args.FullLine.Length < "promote".Length || Chat.instance == null)
+				{
+					return;
+				}
+
+				if (Groups.ownGroup is null)
+				{
+					Chat.instance.AddString("You are not in a group.");
+
+					return;
+				}
+
+				if (Groups.ownGroup.leader != PlayerReference.fromPlayer(Player.m_localPlayer))
+				{
+					Chat.instance.AddString("Only the leader of a group can promote someone.");
+
+					return;
+				}
+
+				string playerName = args.FullLine.Substring(8);
+
+				if (!Groups.ownGroup.PromoteMember(Groups.ownGroup.playerStates.Keys.FirstOrDefault(p => string.Compare(p.name, playerName, StringComparison.OrdinalIgnoreCase) == 0)))
+				{
+					Chat.instance.AddString($"{playerName} is not in this group.");
+				}
+
+			}), optionsFetcher: () => Groups.ownGroup?.playerStates.Keys.Select(p => p.name).Where(n => n != Player.m_localPlayer.GetHoverName()).ToList() ?? new List<string>()));
+
+			_ = new Terminal.ConsoleCommand("leave", "leaves your current group", (Terminal.ConsoleEvent)(args =>
+			{
+				if (args.FullLine.Length < "leave".Length || Chat.instance == null)
+				{
+					return;
+				}
+
+				if (Groups.ownGroup is null)
+				{
+					Chat.instance.AddString("You are not in a group.");
+
+					return;
+				}
+
+				Groups.ownGroup.Leave();
+			}));
+
+			_ = new Terminal.ConsoleCommand("p", "toggles the group chat on", (Terminal.ConsoleEvent)(args =>
+			{
+				if (args.FullLine.Length < "p".Length || Chat.instance == null)
+				{
+					return;
+				}
+
+				if (Groups.ownGroup is null)
+				{
+					Chat.instance.AddString("You are not in a group.");
+
+					return;
+				}
+
+				if (args.FullLine.Length > 2)
+				{
+					string message = args.FullLine.Substring(2);
+
+					foreach (PlayerReference player in Groups.ownGroup.playerStates.Keys)
+					{
+						ZRoutedRpc.instance.InvokeRoutedRPC(player.peerId, "Groups ChatMessage", Player.m_localPlayer.GetHoverName(), message);
+					}
+				}
+				else
+				{
+					groupChatActive = !groupChatActive;
+				}
+			}));
+		}
+	}
+
+	public static void UpdateAutoCompletion()
+	{
+		foreach (Terminal.ConsoleCommand command in terminalCommands)
+		{
+			command.m_tabOptions = null;
+		}
+	}
+
+	[HarmonyPatch(typeof(Chat), nameof(Chat.Update))]
+	private class PlaceHolder
+	{
+		private static void Postfix(Chat __instance)
+		{
+			__instance.m_input.transform.Find("Placeholder").GetComponent<Text>().text = groupChatActive ? "Write to group ..." : "Write something ...";
+		}
+	}
+
+
+	[HarmonyPatch(typeof(Chat), nameof(Chat.Awake))]
+	public class AddGroupChat
+	{
+		private static void Postfix(Chat __instance)
+		{
+			__instance.m_chatBuffer.Insert(__instance.m_chatBuffer.Count - 5, "/p [text] Group chat");
+			__instance.m_chatBuffer.Insert(__instance.m_chatBuffer.Count - 5, "/p Toggle group chat");
+			__instance.UpdateChat();
+		}
+	}
+
+	[HarmonyPatch(typeof(Chat), nameof(Chat.InputText))]
+	public class SendMessageToGroup
+	{
+		private static void Prefix(Chat __instance)
+		{
+			if (__instance.m_input.text.Length != 0 && groupChatActive && __instance.m_input.text[0] != '/')
+			{
+				__instance.m_input.text = "/p " + __instance.m_input.text;
+			}
+		}
+	}
+}

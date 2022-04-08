@@ -16,7 +16,7 @@ public static class Helper
 	public static Texture2D loadTexture(string name)
 	{
 		Texture2D texture = new(0, 0);
-		texture.LoadImage(ReadEmbeddedFileBytes(name));
+		texture.LoadImage(ReadEmbeddedFileBytes("icons." + name));
 		return texture;
 	}
 

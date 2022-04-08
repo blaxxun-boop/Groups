@@ -131,7 +131,7 @@ public class Group
 	{
 		API.InvokeGroupLeft();
 
-		Groups.groupChatActive = false;
+		ChatCommands.groupChatActive = false;
 		PlayerReference ownReference = PlayerReference.fromPlayer(Player.m_localPlayer);
 
 		if (leader == ownReference && playerStates.Count > 1)
