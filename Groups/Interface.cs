@@ -12,6 +12,7 @@ public static class Interface
 {
 	private static Sprite groupLeaderIcon = null!;
 	private static GameObject? groupMemberFirst;
+	public static GameObject? groupDialog;
 
 	public static void Init()
 	{
@@ -165,5 +166,33 @@ public static class Interface
 
 		playerState.health = health;
 		playerState.maxHealth = maxHealth;
+	}
+
+
+	[HarmonyPatch(typeof(Menu), nameof(Menu.Start))]
+	private class AddGroupDialog
+	{
+		private static void Postfix()
+		{
+			groupDialog = UnityEngine.Object.Instantiate(Menu.instance.m_quitDialog.gameObject, Hud.instance.m_rootObject.transform.parent.parent, true);
+			Button.ButtonClickedEvent noClicked = new();
+			noClicked.AddListener(RPC.onDeclineInvitation);
+			groupDialog.transform.Find("dialog/Button_no").GetComponent<Button>().onClick = noClicked;
+			Button.ButtonClickedEvent yesClicked = new();
+			yesClicked.AddListener(RPC.onAcceptInvitation);
+			groupDialog.transform.Find("dialog/Button_yes").GetComponent<Button>().onClick = yesClicked;
+		}
+	}
+
+	[HarmonyPatch(typeof(Menu), nameof(Menu.IsVisible))]
+	private class DisablePlayerInputInGroupDialog
+	{
+		private static void Postfix(ref bool __result)
+		{
+			if (groupDialog?.activeSelf == true)
+			{
+				__result = true;
+			}
+		}
 	}
 }

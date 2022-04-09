@@ -9,7 +9,6 @@ namespace Groups;
 
 public static class RPC
 {
-	private static GameObject? groupDialog;
 	private static long pendingInvitationSenderId;
 
 	[HarmonyPatch(typeof(Game), nameof(Game.Start))]
@@ -170,33 +169,6 @@ public static class RPC
 		}
 	}
 
-	[HarmonyPatch(typeof(Menu), nameof(Menu.Start))]
-	private class AddGroupDialog
-	{
-		private static void Postfix()
-		{
-			groupDialog = UnityEngine.Object.Instantiate(Menu.instance.m_quitDialog.gameObject, Hud.instance.m_rootObject.transform, true);
-			Button.ButtonClickedEvent noClicked = new();
-			noClicked.AddListener(onDeclineInvitation);
-			groupDialog.transform.Find("dialog/Button_no").GetComponent<Button>().onClick = noClicked;
-			Button.ButtonClickedEvent yesClicked = new();
-			yesClicked.AddListener(onAcceptInvitation);
-			groupDialog.transform.Find("dialog/Button_yes").GetComponent<Button>().onClick = yesClicked;
-		}
-	}
-
-	[HarmonyPatch(typeof(Menu), nameof(Menu.IsVisible))]
-	private class DisablePlayerInputInGroupDialog
-	{
-		private static void Postfix(ref bool __result)
-		{
-			if (groupDialog?.activeSelf == true)
-			{
-				__result = true;
-			}
-		}
-	}
-
 	private static void onInvitationReceived(long senderId, string name)
 	{
 		string[] ignored = Groups.ignoreList.Value.Split(',');
@@ -207,8 +179,8 @@ public static class RPC
 
 		pendingInvitationSenderId = senderId;
 
-		groupDialog!.SetActive(true);
-		groupDialog.transform.Find("dialog/Exit").GetComponent<Text>().text = $"{name} invited you to join their group.";
+		Interface.groupDialog!.SetActive(true);
+		Interface.groupDialog.transform.Find("dialog/Exit").GetComponent<Text>().text = $"{name} invited you to join their group.";
 	}
 
 	private static void onForcedInvitationReceived(long senderId)
@@ -216,16 +188,16 @@ public static class RPC
 		API.JoinGroup(PlayerReference.fromPlayerId(senderId));
 	}
 
-	private static void onDeclineInvitation()
+	public static void onDeclineInvitation()
 	{
-		groupDialog!.SetActive(false);
+		Interface.groupDialog!.SetActive(false);
 	}
 
-	private static void onAcceptInvitation()
+	public static void onAcceptInvitation()
 	{
 		Groups.ownGroup?.Leave();
 
-		groupDialog!.SetActive(false);
+		Interface.groupDialog!.SetActive(false);
 
 		ZPackage playerState = new();
 		Group.PlayerState.fromLocal().write(playerState);
@@ -288,6 +260,4 @@ public static class RPC
 		player.m_position = position;
 		ZNet.instance.m_players.Add(player);
 	}
-
-
 }
