@@ -135,7 +135,7 @@ public static class Map
 				if (playerPin.m_name == playerInfo.m_name)
 				{
 					playerPin.m_icon = Groups.ownGroup?.playerStates.ContainsKey(PlayerReference.fromPlayerInfo(playerInfo)) == true ? groupMapPlayerIcon : __instance.GetSprite(Minimap.PinType.Player);
-					if (playerPin.m_iconElement is not null)
+					if (playerPin.m_iconElement)
 					{
 						playerPin.m_iconElement.sprite = playerPin.m_icon;
 					}
@@ -154,7 +154,7 @@ public static class Map
 				Minimap.PinData pingPin = __instance.m_pingPins[i];
 				Chat.WorldTextInstance tempShout = __instance.m_tempShouts[i];
 				pingPin.m_icon = groupPingTexts.TryGetValue(tempShout, out _) ? groupMapPingIcon : __instance.GetSprite(Minimap.PinType.Ping);
-				if (pingPin.m_iconElement is not null)
+				if (pingPin.m_iconElement)
 				{
 					pingPin.m_iconElement.sprite = pingPin.m_icon;
 				}

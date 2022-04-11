@@ -255,9 +255,16 @@ public static class RPC
 
 	private static void onUpdatePosition(long senderId, Vector3 position)
 	{
-		ZNet.PlayerInfo player = ZNet.instance.m_players.FirstOrDefault(id => id.m_characterID.m_userID == senderId);
-		ZNet.instance.m_players.Remove(player);
-		player.m_position = position;
-		ZNet.instance.m_players.Add(player);
+		List<ZNet.PlayerInfo> playerInfos = new();
+		foreach (ZNet.PlayerInfo playerInfo in ZNet.instance.m_players)
+		{
+			ZNet.PlayerInfo info = playerInfo;
+			if (info.m_characterID.m_userID == senderId)
+			{
+				info.m_position = position;
+			}
+			playerInfos.Add(info);
+		}
+		ZNet.instance.m_players = playerInfos;
 	}
 }
