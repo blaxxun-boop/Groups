@@ -167,8 +167,7 @@ public static class Interface
 		playerState.health = health;
 		playerState.maxHealth = maxHealth;
 	}
-
-
+	
 	[HarmonyPatch(typeof(Menu), nameof(Menu.Start))]
 	private class AddGroupDialog
 	{
@@ -189,7 +188,7 @@ public static class Interface
 	{
 		private static void Postfix(ref bool __result)
 		{
-			if (groupDialog?.activeSelf == true)
+			if (groupDialog && groupDialog?.activeSelf == true)
 			{
 				__result = true;
 			}
