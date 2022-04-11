@@ -20,7 +20,7 @@ public static class ChatCommands
 
 			terminalCommands.Add(new Terminal.ConsoleCommand("invite", "invite someone to your group", (Terminal.ConsoleEvent)(args =>
 			{
-				if (args.FullLine.Length < "invite".Length || Chat.instance == null)
+				if (args.FullLine.Length <= "invite".Length || Chat.instance == null)
 				{
 					return;
 				}
@@ -59,7 +59,7 @@ public static class ChatCommands
 
 			terminalCommands.Add(new Terminal.ConsoleCommand("kick", "removes someone from your group", (Terminal.ConsoleEvent)(args =>
 			{
-				if (args.FullLine.Length < "kick".Length || Chat.instance == null)
+				if (args.FullLine.Length <= "kick".Length || Chat.instance == null)
 				{
 					return;
 				}
@@ -96,7 +96,7 @@ public static class ChatCommands
 
 			terminalCommands.Add(new Terminal.ConsoleCommand("promote", "promotes someone to group leader", (Terminal.ConsoleEvent)(args =>
 			{
-				if (args.FullLine.Length < "promote".Length || Chat.instance == null)
+				if (args.FullLine.Length <= "promote".Length || Chat.instance == null)
 				{
 					return;
 				}
@@ -143,7 +143,7 @@ public static class ChatCommands
 
 			_ = new Terminal.ConsoleCommand("p", "toggles the group chat on", (Terminal.ConsoleEvent)(args =>
 			{
-				if (args.FullLine.Length < "p".Length || Chat.instance == null)
+				if (Chat.instance == null)
 				{
 					return;
 				}
