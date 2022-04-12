@@ -24,8 +24,11 @@ public static class Interface
 		if (groupMemberFirst is not null)
 		{
 			Transform groupRoot = groupMemberFirst.transform.parent;
-			groupRoot.localPosition = Groups.groupInterfaceAnchor.Value;
-			groupRoot.GetComponent<DragNDrop>().SetPosition(groupRoot.position);
+			if (((Vector2)groupRoot.localPosition - Groups.groupInterfaceAnchor.Value).magnitude > 0.001)
+			{
+				groupRoot.localPosition = Groups.groupInterfaceAnchor.Value;
+				groupRoot.GetComponent<DragNDrop>().SetPosition(groupRoot.position);
+			}
 		}
 	}
 
@@ -167,7 +170,7 @@ public static class Interface
 		playerState.health = health;
 		playerState.maxHealth = maxHealth;
 	}
-	
+
 	[HarmonyPatch(typeof(Menu), nameof(Menu.Start))]
 	private class AddGroupDialog
 	{
