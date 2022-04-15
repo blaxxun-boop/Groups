@@ -10,6 +10,7 @@ namespace Groups;
 public static class RPC
 {
 	private static long pendingInvitationSenderId;
+	private static readonly Dictionary<string, PlayerReference> characterIdCache = new();
 
 	[HarmonyPatch(typeof(Game), nameof(Game.Start))]
 	private class AddRPCs
@@ -54,6 +55,18 @@ public static class RPC
 
 		private static void Postfix(ZNet __instance, Dictionary<long, Vector3> __state)
 		{
+			foreach (ZNet.PlayerInfo player in __instance.m_players)
+			{
+				if (player.m_characterID != ZDOID.None)
+				{
+					characterIdCache[player.m_host] = PlayerReference.fromPlayerInfo(player);
+				}
+			}
+			foreach (string key in characterIdCache.Keys.Where(host => __instance.m_players.All(p => p.m_host != host)).ToArray())
+			{
+				characterIdCache.Remove(key);
+			}
+
 			ChatCommands.UpdateAutoCompletion();
 
 			if (Groups.ownGroup is null)
@@ -65,7 +78,8 @@ public static class RPC
 			foreach (ZNet.PlayerInfo playerInfo in __instance.m_players)
 			{
 				ZNet.PlayerInfo info = playerInfo;
-				if (Groups.ownGroup.playerStates.ContainsKey(PlayerReference.fromPlayerId(playerInfo.m_characterID.m_userID)) && playerInfo.m_characterID != Player.m_localPlayer?.GetZDOID())
+				characterIdCache.TryGetValue(info.m_host, out PlayerReference player);
+				if (Groups.ownGroup.playerStates.ContainsKey(player!) && player.peerId != ZDOMan.instance.GetMyID())
 				{
 					if (__state.TryGetValue(playerInfo.m_characterID.m_userID, out Vector3 position))
 					{
@@ -80,12 +94,10 @@ public static class RPC
 			}
 			__instance.m_players = playerInfos;
 
-			List<PlayerReference> online = __instance.m_players.Select(PlayerReference.fromPlayerInfo).ToList();
-
 			if (Groups.ownGroup.leader.peerId != ZDOMan.instance.GetMyID())
 			{
-				bool leaderIsOnline = online.Contains(Groups.ownGroup.leader);
-				if (leaderIsOnline || Groups.ownGroup.playerStates.Keys.OrderBy(p => p.peerId).First(online.Contains).peerId != ZDOMan.instance.GetMyID())
+				bool leaderIsOnline = characterIdCache.ContainsValue(Groups.ownGroup.leader);
+				if (leaderIsOnline || Groups.ownGroup.playerStates.Keys.OrderBy(p => p.peerId).First(characterIdCache.Values.Contains).peerId != ZDOMan.instance.GetMyID())
 				{
 					return;
 				}
@@ -93,7 +105,7 @@ public static class RPC
 				Groups.ownGroup.PromoteMember(PlayerReference.fromPlayerId(ZDOMan.instance.GetMyID()));
 			}
 
-			foreach (PlayerReference player in Groups.ownGroup.playerStates.Keys.Except(online).ToArray())
+			foreach (PlayerReference player in Groups.ownGroup.playerStates.Keys.Except(characterIdCache.Values).ToArray())
 			{
 				Groups.ownGroup.RemoveMember(player, true);
 			}
