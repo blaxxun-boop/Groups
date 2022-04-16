@@ -4,7 +4,7 @@ namespace Groups;
 
 public struct PlayerReference
 {
-	public static PlayerReference fromPlayerId(long id) => fromPlayerInfo(ZNet.instance.m_players.First(p => p.m_characterID.m_userID == id));
+	public static PlayerReference fromPlayerId(long id) => ZNet.instance.m_players.Where(p => p.m_characterID.m_userID == id).Select(fromPlayerInfo).FirstOrDefault();
 	public static PlayerReference fromPlayerInfo(ZNet.PlayerInfo playerInfo) => new() { peerId = playerInfo.m_characterID.m_userID, name = playerInfo.m_name ?? "" };
 	public static PlayerReference fromPlayer(Player player) => player == Player.m_localPlayer ? new PlayerReference { peerId = ZDOMan.instance.GetMyID(), name = Game.instance.GetPlayerProfile().GetName() } : fromPlayerInfo(ZNet.instance.m_players.FirstOrDefault(info => info.m_characterID == player.GetZDOID()));
 

@@ -35,6 +35,15 @@ public static class RPC
 		}
 	}
 
+	[HarmonyPatch(typeof(Player), nameof(Player.SetLocalPlayer))]
+	private class SetCharacterId
+	{
+		private static void Postfix(Player __instance)
+		{
+			ZNet.instance.m_characterID = __instance.GetZDOID();
+		}
+	}
+
 	[HarmonyPatch(typeof(ZNet), nameof(ZNet.RPC_PlayerList))]
 	private class RemoveFromGroupOnLogoutAndPreservePosition
 	{
