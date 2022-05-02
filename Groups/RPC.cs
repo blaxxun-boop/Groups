@@ -198,6 +198,11 @@ public static class RPC
 			return;
 		}
 
+		if (Groups.blockInvitations.Value == Groups.BlockInvitation.Always || (Groups.blockInvitations.Value == Groups.BlockInvitation.PvP && Player.m_localPlayer.IsPVPEnabled()))
+		{
+			return;
+		}
+
 		pendingInvitationSenderId = senderId;
 
 		Interface.groupDialog!.SetActive(true);

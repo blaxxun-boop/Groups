@@ -149,4 +149,27 @@ public class API
 		return true;
 #endif
 	}
+
+	public static PlayerReference? FindGroupMemberByPlayerId(long playerId)
+	{
+		if (playerId == Game.instance.m_playerProfile.GetPlayerID())
+		{
+			return PlayerReference.fromPlayerId(ZDOMan.instance.GetMyID());
+		}
+
+#if ! API
+		if (Groups.ownGroup is {} ownGroup)
+		{
+			foreach (KeyValuePair<PlayerReference, Group.PlayerState> kv in ownGroup.playerStates)
+			{
+				if (kv.Value.playerId == playerId)
+				{
+					return kv.Key;
+				}
+			}
+		}
+#endif
+
+		return null;
+	}
 }

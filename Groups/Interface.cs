@@ -128,7 +128,7 @@ public static class Interface
 
 					member.Find("Health/health_slow").GetComponent<GuiBar>().SetValue(playerState.health / playerState.maxHealth);
 					member.Find("Health/health_fast").GetComponent<GuiBar>().SetValue(playerState.health / playerState.maxHealth);
-					member.Find("Life Display Text").GetComponent<Text>().text = Mathf.Ceil(playerState.health) + " / " + Mathf.Ceil(playerState.maxHealth);
+					member.Find("Life Display Text").GetComponent<Text>().text = playerState.health <= 0 ? "DEAD" : Mathf.Ceil(playerState.health) + " / " + Mathf.Ceil(playerState.maxHealth);
 
 					Text memberText = member.Find("Name").GetComponent<Text>();
 					memberText.text = player.name;

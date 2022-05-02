@@ -25,18 +25,24 @@ public static class ChatCommands
 					return;
 				}
 
+				if (Player.m_localPlayer?.m_nview.GetZDO().GetBool("dead") != false)
+				{
+					args.Context.AddString("You are dead.");
+					return;
+				}
+
 				string playerName = args.FullLine.Substring(7);
 
 				if (string.Compare(playerName, Player.m_localPlayer.GetHoverName(), StringComparison.OrdinalIgnoreCase) == 0)
 				{
-					Chat.instance.AddString("You cannot invite yourself.");
+					args.Context.AddString("You cannot invite yourself.");
 					return;
 				}
 
 				long targetId = ZNet.instance.m_players.FirstOrDefault(p => string.Compare(playerName, p.m_name, StringComparison.OrdinalIgnoreCase) == 0).m_characterID.m_userID;
 				if (targetId == 0)
 				{
-					Chat.instance.AddString($"{playerName} is not online.");
+					args.Context.AddString($"{playerName} is not online.");
 					return;
 				}
 
@@ -49,11 +55,11 @@ public static class ChatCommands
 				if (Groups.ownGroup.leader == PlayerReference.fromPlayer(Player.m_localPlayer))
 				{
 					ZRoutedRpc.instance.InvokeRoutedRPC(targetId, "Groups InvitePlayer", Player.m_localPlayer.GetHoverName());
-					Chat.instance.AddString($"Sent an invitation to {playerName}.");
+					args.Context.AddString($"Sent an invitation to {playerName}.");
 				}
 				else
 				{
-					Chat.instance.AddString("Only the leader of a group can send out invitations.");
+					args.Context.AddString("Only the leader of a group can send out invitations.");
 				}
 			}), optionsFetcher: () => ZNet.instance.m_players.Select(p => p.m_name).ToList()));
 
@@ -66,14 +72,14 @@ public static class ChatCommands
 
 				if (Groups.ownGroup is null)
 				{
-					Chat.instance.AddString("You are not in a group.");
+					args.Context.AddString("You are not in a group.");
 
 					return;
 				}
 
 				if (Groups.ownGroup.leader != PlayerReference.fromPlayer(Player.m_localPlayer))
 				{
-					Chat.instance.AddString("Only the leader of a group can kick members.");
+					args.Context.AddString("Only the leader of a group can kick members.");
 
 					return;
 				}
@@ -82,14 +88,14 @@ public static class ChatCommands
 
 				if (string.Compare(playerName, Player.m_localPlayer.GetHoverName(), StringComparison.OrdinalIgnoreCase) == 0)
 				{
-					Chat.instance.AddString("You cannot kick yourself. Please use /leave instead.");
+					args.Context.AddString("You cannot kick yourself. Please use /leave instead.");
 
 					return;
 				}
 
 				if (!Groups.ownGroup.RemoveMember(Groups.ownGroup.playerStates.Keys.FirstOrDefault(p => string.Compare(p.name, playerName, StringComparison.OrdinalIgnoreCase) == 0)))
 				{
-					Chat.instance.AddString($"{playerName} is not in this group.");
+					args.Context.AddString($"{playerName} is not in this group.");
 				}
 
 			}), optionsFetcher: () => Groups.ownGroup?.playerStates.Keys.Select(p => p.name).Where(n => n != Player.m_localPlayer.GetHoverName()).ToList() ?? new List<string>()));
@@ -103,14 +109,14 @@ public static class ChatCommands
 
 				if (Groups.ownGroup is null)
 				{
-					Chat.instance.AddString("You are not in a group.");
+					args.Context.AddString("You are not in a group.");
 
 					return;
 				}
 
 				if (Groups.ownGroup.leader != PlayerReference.fromPlayer(Player.m_localPlayer))
 				{
-					Chat.instance.AddString("Only the leader of a group can promote someone.");
+					args.Context.AddString("Only the leader of a group can promote someone.");
 
 					return;
 				}
@@ -119,7 +125,7 @@ public static class ChatCommands
 
 				if (!Groups.ownGroup.PromoteMember(Groups.ownGroup.playerStates.Keys.FirstOrDefault(p => string.Compare(p.name, playerName, StringComparison.OrdinalIgnoreCase) == 0)))
 				{
-					Chat.instance.AddString($"{playerName} is not in this group.");
+					args.Context.AddString($"{playerName} is not in this group.");
 				}
 
 			}), optionsFetcher: () => Groups.ownGroup?.playerStates.Keys.Select(p => p.name).Where(n => n != Player.m_localPlayer.GetHoverName()).ToList() ?? new List<string>()));
@@ -133,7 +139,7 @@ public static class ChatCommands
 
 				if (Groups.ownGroup is null)
 				{
-					Chat.instance.AddString("You are not in a group.");
+					args.Context.AddString("You are not in a group.");
 
 					return;
 				}
@@ -150,7 +156,7 @@ public static class ChatCommands
 
 				if (Groups.ownGroup is null)
 				{
-					Chat.instance.AddString("You are not in a group.");
+					args.Context.AddString("You are not in a group.");
 
 					return;
 				}
@@ -195,8 +201,9 @@ public static class ChatCommands
 	{
 		private static void Postfix(Chat __instance)
 		{
-			__instance.m_chatBuffer.Insert(__instance.m_chatBuffer.Count - 5, "/p [text] Group chat");
-			__instance.m_chatBuffer.Insert(__instance.m_chatBuffer.Count - 5, "/p Toggle group chat");
+			int insertIndex = Math.Max(0, __instance.m_chatBuffer.Count - 5);
+			__instance.m_chatBuffer.Insert(insertIndex, "/p [text] Group chat");
+			__instance.m_chatBuffer.Insert(insertIndex, "/p Toggle group chat");
 			__instance.UpdateChat();
 		}
 	}

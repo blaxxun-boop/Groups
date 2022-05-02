@@ -35,21 +35,23 @@ public class Group
 	{
 		public float health;
 		public float maxHealth;
+		public long playerId;
 
 		public static PlayerState read(ZPackage group) => new()
 		{
 			health = group.ReadSingle(),
-			maxHealth = group.ReadSingle()
-
+			maxHealth = group.ReadSingle(),
+			playerId = group.ReadLong(),
 		};
 
 		public void write(ZPackage group)
 		{
 			group.Write(health);
 			group.Write(maxHealth);
+			group.Write(playerId);
 		}
 
-		public static PlayerState fromLocal() => new() { health = Player.m_localPlayer.GetHealth(), maxHealth = Player.m_localPlayer.GetMaxHealth() };
+		public static PlayerState fromLocal() => new() { health = Player.m_localPlayer.GetHealth(), maxHealth = Player.m_localPlayer.GetMaxHealth(), playerId = Game.instance.m_playerProfile.GetPlayerID() };
 	}
 
 	private bool CheckGroupFull() => playerStates.Count >= Groups.maximumGroupSize.Value;

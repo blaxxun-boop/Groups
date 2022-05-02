@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using BepInEx;
@@ -14,7 +15,7 @@ namespace Groups;
 public class Groups : BaseUnityPlugin
 {
 	private const string ModName = "Groups";
-	private const string ModVersion = "1.1.7";
+	private const string ModVersion = "1.1.8";
 	private const string ModGUID = "org.bepinex.plugins.groups";
 
 	public static Group? ownGroup;
@@ -31,6 +32,7 @@ public class Groups : BaseUnityPlugin
 	public static ConfigEntry<GroupLeaderDisplayOption> groupLeaderDisplay = null!;
 	public static ConfigEntry<Color> groupLeaderColor = null!;
 	public static ConfigEntry<float> spaceBetweenGroupMembers = null!;
+	public static ConfigEntry<BlockInvitation> blockInvitations = null!;
 
 	private static int configOrder = 0;
 
@@ -61,6 +63,14 @@ public class Groups : BaseUnityPlugin
 		Color
 	}
 
+	public enum BlockInvitation
+	{
+		Never,
+		Always,
+		[Description("While PvP enabled")]
+		PvP
+	}
+	
 	private class ConfigurationManagerAttributes
 	{
 		[UsedImplicitly] public int? Order;
@@ -99,6 +109,7 @@ public class Groups : BaseUnityPlugin
 		spaceBetweenGroupMembers.SettingChanged += Interface.UpdateGroupInterfaceSpacing;
 		groupPingHotkey = config("3 - Other", "Group ping modifier key", new KeyboardShortcut(KeyCode.LeftAlt), new ConfigDescription("Modifier key that has to be pressed while pinging the map, to make the map ping visible to group members only."), false);
 		ignoreList = config("3 - Other", "Names of people who cannot invite you", "", new ConfigDescription("Ignore group invitations from people on this list. Comma separated."), false);
+		blockInvitations = config("3 - Other", "Block all invitations", BlockInvitation.Never, new ConfigDescription("Can be used to block all invitations. Optionally, only block invitations while PvP is enabled."), false);
 
 		Assembly assembly = Assembly.GetExecutingAssembly();
 		Harmony harmony = new(ModGUID);
