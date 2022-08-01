@@ -15,14 +15,14 @@ namespace Groups;
 public class Groups : BaseUnityPlugin
 {
 	private const string ModName = "Groups";
-	private const string ModVersion = "1.1.8";
+	private const string ModVersion = "1.1.10";
 	private const string ModGUID = "org.bepinex.plugins.groups";
 
 	public static Group? ownGroup;
 
 	private static ConfigEntry<Toggle> serverConfigLocked = null!;
 	public static ConfigEntry<int> maximumGroupSize = null!;
-	private static ConfigEntry<Toggle> friendlyFire = null!;
+	public static ConfigEntry<Toggle> friendlyFire = null!;
 	public static ConfigEntry<Color> friendlyNameColor = null!;
 	public static ConfigEntry<string> ignoreList = null!;
 	public static ConfigEntry<Color> groupChatColor = null!;
@@ -68,7 +68,9 @@ public class Groups : BaseUnityPlugin
 		Never,
 		Always,
 		[Description("While PvP enabled")]
-		PvP
+		PvP,
+		[Description("While Enemy Player Nearby")]
+		Enemy
 	}
 	
 	private class ConfigurationManagerAttributes

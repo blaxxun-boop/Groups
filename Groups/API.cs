@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
+using UnityEngine;
 
 namespace Groups;
 
@@ -16,11 +17,16 @@ public class API
 
 	public static event Action<PlayerReference>? leaderChanged;
 
+	public static event Action<PlayerReference, GameObject>? invitationReceived;
+	public static event Action<PlayerReference, GameObject>? uiUpdate;
+
 	internal static void InvokeGroupJoined() => joinedGroup?.Invoke();
 	internal static void InvokeGroupLeft() => leftGroup?.Invoke();
 	internal static void InvokeMemberJoined(PlayerReference player) => memberJoined?.Invoke(player);
 	internal static void InvokeMemberLeft(PlayerReference player) => memberLeft?.Invoke(player);
 	internal static void InvokeLeaderChanged(PlayerReference player) => leaderChanged?.Invoke(player);
+	internal static void InvokeInvitationReceived(PlayerReference player, GameObject invitationDialog) => invitationReceived?.Invoke(player, invitationDialog);
+	internal static void InvokeUIUpdate(PlayerReference player, GameObject playerRoot) => uiUpdate?.Invoke(player, playerRoot);
 
 	public static bool IsLoaded()
 	{

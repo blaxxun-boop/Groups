@@ -63,9 +63,9 @@ public static class ChatCommands
 				}
 			}), optionsFetcher: () => ZNet.instance.m_players.Select(p => p.m_name).ToList()));
 
-			terminalCommands.Add(new Terminal.ConsoleCommand("kick", "removes someone from your group", (Terminal.ConsoleEvent)(args =>
+			terminalCommands.Add(new Terminal.ConsoleCommand("remove", "removes someone from your group", (Terminal.ConsoleEvent)(args =>
 			{
-				if (args.FullLine.Length <= "kick".Length || Chat.instance == null)
+				if (args.FullLine.Length <= "remove".Length || Chat.instance == null)
 				{
 					return;
 				}
@@ -79,16 +79,16 @@ public static class ChatCommands
 
 				if (Groups.ownGroup.leader != PlayerReference.fromPlayer(Player.m_localPlayer))
 				{
-					args.Context.AddString("Only the leader of a group can kick members.");
+					args.Context.AddString("Only the leader of a group can remove members.");
 
 					return;
 				}
 
-				string playerName = args.FullLine.Substring(5);
+				string playerName = args.FullLine.Substring(7);
 
 				if (string.Compare(playerName, Player.m_localPlayer.GetHoverName(), StringComparison.OrdinalIgnoreCase) == 0)
 				{
-					args.Context.AddString("You cannot kick yourself. Please use /leave instead.");
+					args.Context.AddString("You cannot remove yourself. Please use /leave instead.");
 
 					return;
 				}

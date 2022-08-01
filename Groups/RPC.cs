@@ -198,15 +198,25 @@ public static class RPC
 			return;
 		}
 
-		if (Groups.blockInvitations.Value == Groups.BlockInvitation.Always || (Groups.blockInvitations.Value == Groups.BlockInvitation.PvP && Player.m_localPlayer.IsPVPEnabled()))
+		if (Groups.blockInvitations.Value == Groups.BlockInvitation.Always || (Groups.blockInvitations.Value == Groups.BlockInvitation.PvP && Player.m_localPlayer?.IsPVPEnabled() == true))
 		{
 			return;
+		}
+
+		if (Groups.blockInvitations.Value == Groups.BlockInvitation.Enemy)
+		{
+			if (Player.m_localPlayer?.IsPVPEnabled() == true && Player.m_players.Any(p => p != Player.m_localPlayer && p.IsPVPEnabled() && (Groups.friendlyFire.Value == Groups.Toggle.On || Groups.ownGroup?.playerStates.ContainsKey(PlayerReference.fromPlayer(p)) != true) && Vector3.Distance(Player.m_localPlayer.transform.position, p.transform.position) < 30))
+			{
+				return;
+			}
 		}
 
 		pendingInvitationSenderId = senderId;
 
 		Interface.groupDialog!.SetActive(true);
 		Interface.groupDialog.transform.Find("dialog/Exit").GetComponent<Text>().text = $"{name} invited you to join their group.";
+		
+		API.InvokeInvitationReceived(PlayerReference.fromPlayerId(senderId), Interface.groupDialog);
 	}
 
 	private static void onForcedInvitationReceived(long senderId)

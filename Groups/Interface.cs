@@ -134,6 +134,8 @@ public static class Interface
 					memberText.text = player.name;
 					memberText.color = player == Groups.ownGroup.leader && Groups.groupLeaderDisplay.Value == Groups.GroupLeaderDisplayOption.Color ? Groups.groupLeaderColor.Value : Groups.friendlyNameColor.Value;
 					member.Find("Leader Icon").gameObject.SetActive(player == Groups.ownGroup.leader && Groups.groupLeaderDisplay.Value == Groups.GroupLeaderDisplayOption.Icon);
+
+					API.InvokeUIUpdate(player, member.gameObject);
 				}
 			}
 		}
