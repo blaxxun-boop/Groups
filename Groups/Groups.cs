@@ -15,7 +15,7 @@ namespace Groups;
 public class Groups : BaseUnityPlugin
 {
 	private const string ModName = "Groups";
-	private const string ModVersion = "1.1.10";
+	private const string ModVersion = "1.1.11";
 	private const string ModGUID = "org.bepinex.plugins.groups";
 
 	public static Group? ownGroup;
