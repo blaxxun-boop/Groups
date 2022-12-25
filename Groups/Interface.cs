@@ -101,11 +101,12 @@ public static class Interface
 			{
 				GameObject newMember = UnityEngine.Object.Instantiate(groupMemberFirst, groupRoot, false);
 				newMember.transform.localPosition = Groups.horizontalGroupInterface.Value == Groups.Toggle.On ? new Vector3((groupRoot.childCount - 1) * Groups.spaceBetweenGroupMembers.Value, 0) : new Vector3(0, -(groupRoot.childCount - 1) * Groups.spaceBetweenGroupMembers.Value);
-				float originalWidth = groupMemberFirst.transform.Find("Health/health_slow").GetComponent<GuiBar>().m_width;
+				GuiBar originalBar = groupMemberFirst.transform.Find("Health/health_slow").GetComponent<GuiBar>();
+				Vector2 originalSize = new(Mathf.Max(originalBar.m_bar.sizeDelta.x, originalBar.m_width), originalBar.m_bar.sizeDelta.y);
 				newMember.transform.Find("Health/health_slow").GetComponent<GuiBar>().m_firstSet = true;
-				newMember.transform.Find("Health/health_slow").GetComponent<GuiBar>().m_width = originalWidth;
+				newMember.transform.Find("Health/health_slow").GetComponent<GuiBar>().m_bar.sizeDelta = originalSize;
 				newMember.transform.Find("Health/health_fast").GetComponent<GuiBar>().m_firstSet = true;
-				newMember.transform.Find("Health/health_fast").GetComponent<GuiBar>().m_width = originalWidth;
+				newMember.transform.Find("Health/health_fast").GetComponent<GuiBar>().m_bar.sizeDelta = originalSize;
 
 				wasActive = false;
 			}

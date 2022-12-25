@@ -161,5 +161,4 @@ public static class Map
 			}
 		}
 	}
-
 }
