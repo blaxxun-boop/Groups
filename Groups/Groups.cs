@@ -15,7 +15,7 @@ namespace Groups;
 public class Groups : BaseUnityPlugin
 {
 	private const string ModName = "Groups";
-	private const string ModVersion = "1.1.12";
+	private const string ModVersion = "1.1.13";
 	private const string ModGUID = "org.bepinex.plugins.groups";
 
 	public static Group? ownGroup;
@@ -139,7 +139,7 @@ public class Groups : BaseUnityPlugin
 	{
 		private static bool Prefix(Character __instance, HitData hit)
 		{
-			if (__instance == Player.m_localPlayer && hit.GetAttacker() is Player attacker)
+			if (__instance == Player.m_localPlayer && hit.GetAttacker() is Player attacker && hit.m_statusEffect != "Staff_shield")
 			{
 				if (friendlyFire.Value == Toggle.Off && ownGroup is not null && ownGroup.playerStates.ContainsKey(PlayerReference.fromPlayer(attacker)))
 				{
