@@ -12,10 +12,11 @@ using UnityEngine;
 namespace Groups;
 
 [BepInPlugin(ModGUID, ModName, ModVersion)]
+[BepInIncompatibility("org.bepinex.plugins.valheim_plus")]
 public class Groups : BaseUnityPlugin
 {
 	private const string ModName = "Groups";
-	private const string ModVersion = "1.1.13";
+	private const string ModVersion = "1.1.14";
 	private const string ModGUID = "org.bepinex.plugins.groups";
 
 	public static Group? ownGroup;

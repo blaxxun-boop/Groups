@@ -179,6 +179,7 @@ public static class RPC
 	private static void onChatMessageReceived(long senderId, string name, string message)
 	{
 		Chat.instance.AddString("<color=orange>" + name + "</color>: <color=#" + ColorUtility.ToHtmlStringRGBA(Groups.groupChatColor.Value) + ">" + message + "</color>");
+		Chat.instance.m_hideTimer = 0f;
 		ZDOID playerZDO = ZNet.instance.m_players.FirstOrDefault(p => p.m_characterID.m_userID == senderId).m_characterID;
 		if (playerZDO != ZDOID.None && ZNetScene.instance.FindInstance(playerZDO) is { } playerObject && playerObject.GetComponent<Player>() is { } player)
 		{
