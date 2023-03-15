@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using BepInEx;
 using BepInEx.Configuration;
+using BepInEx.Logging;
 using HarmonyLib;
 using JetBrains.Annotations;
 using ServerSync;
@@ -20,6 +21,9 @@ public class Groups : BaseUnityPlugin
 	private const string ModGUID = "org.bepinex.plugins.groups";
 
 	public static Group? ownGroup;
+	
+	public static readonly ManualLogSource GroupsLogger =
+		BepInEx.Logging.Logger.CreateLogSource(ModName);
 
 	private static ConfigEntry<Toggle> serverConfigLocked = null!;
 	public static ConfigEntry<int> maximumGroupSize = null!;

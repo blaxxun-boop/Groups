@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -97,47 +98,125 @@ public static class Interface
 				return;
 			}
 
-			while (groupRoot.childCount < Groups.ownGroup.playerStates.Count)
+			while (groupRoot != null && groupRoot.childCount < Groups.ownGroup.playerStates.Count)
 			{
 				GameObject newMember = UnityEngine.Object.Instantiate(groupMemberFirst, groupRoot, false);
-				newMember.transform.localPosition = Groups.horizontalGroupInterface.Value == Groups.Toggle.On ? new Vector3((groupRoot.childCount - 1) * Groups.spaceBetweenGroupMembers.Value, 0) : new Vector3(0, -(groupRoot.childCount - 1) * Groups.spaceBetweenGroupMembers.Value);
-				GuiBar originalBar = groupMemberFirst.transform.Find("Health/health_slow").GetComponent<GuiBar>();
-				Vector2 originalSize = new(Mathf.Max(originalBar.m_bar.sizeDelta.x, originalBar.m_width), originalBar.m_bar.sizeDelta.y);
-				newMember.transform.Find("Health/health_slow").GetComponent<GuiBar>().m_firstSet = true;
-				newMember.transform.Find("Health/health_slow").GetComponent<GuiBar>().m_bar.sizeDelta = originalSize;
-				newMember.transform.Find("Health/health_fast").GetComponent<GuiBar>().m_firstSet = true;
-				newMember.transform.Find("Health/health_fast").GetComponent<GuiBar>().m_bar.sizeDelta = originalSize;
+				if (newMember != null)
+				{
+					newMember.transform.localPosition = Groups.horizontalGroupInterface.Value == Groups.Toggle.On
+						? new Vector3((groupRoot.childCount - 1) * Groups.spaceBetweenGroupMembers.Value, 0)
+						: new Vector3(0, -(groupRoot.childCount - 1) * Groups.spaceBetweenGroupMembers.Value);
+					
+					Transform healthSlowTransform = newMember.transform.Find("Health/health_slow");
+					Transform healthFastTransform = newMember.transform.Find("Health/health_fast");
 
-				wasActive = false;
+					GuiBar originalBar = groupMemberFirst.transform.Find("Health/health_slow").GetComponent<GuiBar>();
+					Vector2 originalSize = new(Mathf.Max(originalBar.m_bar.sizeDelta.x, originalBar.m_width),
+						originalBar.m_bar.sizeDelta.y);
+					
+					if (healthSlowTransform != null)
+					{
+						GuiBar healthSlowGuiBar = healthSlowTransform.GetComponent<GuiBar>();
+						if (healthSlowGuiBar != null)
+						{
+							healthSlowGuiBar.m_firstSet = true;
+							healthSlowGuiBar.m_bar.sizeDelta = originalSize;
+						}
+					}
+					else
+					{
+						Groups.GroupsLogger.LogWarning("healthSlowTransform is null");
+					}
+					
+					if (healthFastTransform != null)
+					{
+						GuiBar healthFastGuiBar = healthFastTransform.GetComponent<GuiBar>();
+						if (healthFastGuiBar != null)
+						{
+							healthFastGuiBar.m_firstSet = true;
+							healthFastGuiBar.m_bar.sizeDelta = originalSize;
+						}
+					}
+					else
+					{
+						Groups.GroupsLogger.LogWarning("healthFastTransform is null");
+					}
+
+
+					wasActive = false;
+				}
 			}
 
+			if (groupRoot == null) return;
 			if (!wasActive)
 			{
 				groupRoot.GetComponent<DragNDrop>().SetPosition(groupRoot.transform.position);
 			}
 
+			UpdateGroupMembers(groupRoot);
+		}
+		
+		private static void UpdateGroupMembers(Transform groupRoot)
+		{
 			for (int i = 0; i < groupRoot.childCount; ++i)
 			{
 				Transform member = groupRoot.GetChild(i);
+				if (member == null) continue;
+
 				List<KeyValuePair<PlayerReference, Group.PlayerState>> members = Groups.ownGroup.playerStates.ToList();
 				bool active = i < Groups.ownGroup.playerStates.Count;
 				member.gameObject.SetActive(active);
+
 				if (active)
 				{
 					PlayerReference player = members[i].Key;
 					Group.PlayerState playerState = members[i].Value;
 
-					member.Find("Health/health_slow").GetComponent<GuiBar>().SetValue(playerState.health / playerState.maxHealth);
-					member.Find("Health/health_fast").GetComponent<GuiBar>().SetValue(playerState.health / playerState.maxHealth);
-					member.Find("Life Display Text").GetComponent<Text>().text = playerState.health <= 0 ? "DEAD" : Mathf.Ceil(playerState.health) + " / " + Mathf.Ceil(playerState.maxHealth);
-
-					Text memberText = member.Find("Name").GetComponent<Text>();
-					memberText.text = player.name;
-					memberText.color = player == Groups.ownGroup.leader && Groups.groupLeaderDisplay.Value == Groups.GroupLeaderDisplayOption.Color ? Groups.groupLeaderColor.Value : Groups.friendlyNameColor.Value;
-					member.Find("Leader Icon").gameObject.SetActive(player == Groups.ownGroup.leader && Groups.groupLeaderDisplay.Value == Groups.GroupLeaderDisplayOption.Icon);
+					UpdateHealthBars(member, playerState);
+					UpdateLifeDisplayText(member, playerState);
+					UpdateMemberName(member, player);
+					UpdateLeaderIcon(member, player);
 
 					API.InvokeUIUpdate(player, member.gameObject);
 				}
+			}
+		}
+
+		private static void UpdateHealthBars(Transform member, Group.PlayerState playerState)
+		{
+			float healthValue = playerState.health / playerState.maxHealth;
+
+			member.Find("Health/health_slow")?.GetComponent<GuiBar>()?.SetValue(healthValue);
+			member.Find("Health/health_fast")?.GetComponent<GuiBar>()?.SetValue(healthValue);
+		}
+
+		private static void UpdateLifeDisplayText(Transform member, Group.PlayerState playerState)
+		{
+			Text lifeDisplayText = member.Find("Life Display Text")?.GetComponent<Text>();
+			if (lifeDisplayText != null)
+			{
+				lifeDisplayText.text = playerState.health <= 0 ? "DEAD" : $"{Mathf.Ceil(playerState.health)} / {Mathf.Ceil(playerState.maxHealth)}";
+			}
+		}
+
+		private static void UpdateMemberName(Transform member, PlayerReference player)
+		{
+			TMP_Text memberText = member.Find("Name")?.GetComponent<TMP_Text>();
+			if (memberText != null)
+			{
+				memberText.text = player.name;
+				memberText.color = player == Groups.ownGroup.leader && Groups.groupLeaderDisplay.Value == Groups.GroupLeaderDisplayOption.Color
+					? Groups.groupLeaderColor.Value
+					: Groups.friendlyNameColor.Value;
+			}
+		}
+
+		private static void UpdateLeaderIcon(Transform member, PlayerReference player)
+		{
+			Transform leaderIconTransform = member.Find("Leader Icon");
+			if (leaderIconTransform != null)
+			{
+				leaderIconTransform.gameObject.SetActive(player == Groups.ownGroup.leader && Groups.groupLeaderDisplay.Value == Groups.GroupLeaderDisplayOption.Icon);
 			}
 		}
 	}
