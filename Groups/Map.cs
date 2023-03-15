@@ -88,11 +88,11 @@ public static class Map
 		}
 	}
 
-	public static void onMapPing(long senderId, Vector3 position, int type, string name, string text)
+	public static void onMapPing(long senderId, Vector3 position, int type, UserInfo name, string text)
 	{
 		Chat.instance.RPC_ChatMessage(senderId, position, type, name, text, PrivilegeManager.GetNetworkUserId());
 		Chat.WorldTextInstance worldText = Chat.instance.FindExistingWorldText(senderId);
-		worldText.m_textField.color = Groups.friendlyNameColor.Value;
+		worldText.m_textMeshField.color = Groups.friendlyNameColor.Value;
 		groupPingTexts.Add(worldText, Array.Empty<object>());
 	}
 
