@@ -167,7 +167,7 @@ public static class ChatCommands
 
 					foreach (PlayerReference player in Groups.ownGroup.playerStates.Keys)
 					{
-						ZRoutedRpc.instance.InvokeRoutedRPC(player.peerId, "Groups ChatMessage", Player.m_localPlayer.GetHoverName(), message);
+						ZRoutedRpc.instance.InvokeRoutedRPC(player.peerId, "Groups ChatMessage", UserInfo.GetLocalUser(), message);
 					}
 				}
 				else

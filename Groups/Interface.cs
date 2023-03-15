@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -131,7 +132,7 @@ public static class Interface
 					member.Find("Health/health_fast").GetComponent<GuiBar>().SetValue(playerState.health / playerState.maxHealth);
 					member.Find("Life Display Text").GetComponent<Text>().text = playerState.health <= 0 ? "DEAD" : Mathf.Ceil(playerState.health) + " / " + Mathf.Ceil(playerState.maxHealth);
 
-					Text memberText = member.Find("Name").GetComponent<Text>();
+					TextMeshProUGUI memberText = member.Find("Name").GetComponent<TextMeshProUGUI>();
 					memberText.text = player.name;
 					memberText.color = player == Groups.ownGroup.leader && Groups.groupLeaderDisplay.Value == Groups.GroupLeaderDisplayOption.Color ? Groups.groupLeaderColor.Value : Groups.friendlyNameColor.Value;
 					member.Find("Leader Icon").gameObject.SetActive(player == Groups.ownGroup.leader && Groups.groupLeaderDisplay.Value == Groups.GroupLeaderDisplayOption.Icon);

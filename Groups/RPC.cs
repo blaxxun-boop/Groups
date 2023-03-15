@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using HarmonyLib;
 using UnityEngine;
 using UnityEngine.UI;
@@ -22,7 +23,7 @@ public static class RPC
 				Chat.instance.AddString(message);
 				Chat.instance.m_hideTimer = 0f;
 			});
-			ZRoutedRpc.instance.Register<string, string>("Groups ChatMessage", onChatMessageReceived);
+			ZRoutedRpc.instance.Register<UserInfo, string>("Groups ChatMessage", onChatMessageReceived);
 			ZRoutedRpc.instance.Register<string>("Groups InvitePlayer", onInvitationReceived);
 			ZRoutedRpc.instance.Register("Groups ForcedInvitation", onForcedInvitationReceived);
 			ZRoutedRpc.instance.Register<ZPackage>("Groups AcceptInvitation", onInvitationAccepted);
@@ -31,7 +32,7 @@ public static class RPC
 			ZRoutedRpc.instance.Register<string, ZPackage>("Groups AddMember", onNewGroupMember);
 			ZRoutedRpc.instance.Register<float, float>("Groups UpdateHealth", Interface.onUpdateHealth);
 			ZRoutedRpc.instance.Register<Vector3>("Groups UpdatePosition", onUpdatePosition);
-			ZRoutedRpc.instance.Register<Vector3, int, string, string>("Groups MapPing", Map.onMapPing);
+			ZRoutedRpc.instance.Register<Vector3, int, UserInfo, string>("Groups MapPing", Map.onMapPing);
 		}
 	}
 
@@ -44,9 +45,15 @@ public static class RPC
 		}
 	}
 
-	[HarmonyPatch(typeof(ZNet), nameof(ZNet.RPC_PlayerList))]
+	[HarmonyPatch]
 	private class RemoveFromGroupOnLogoutAndPreservePosition
 	{
+		private static IEnumerable<MethodInfo> TargetMethods() => new[]
+		{
+			AccessTools.DeclaredMethod(typeof(ZNet), nameof(ZNet.RPC_PlayerList)),
+			AccessTools.DeclaredMethod(typeof(ZNet), nameof(ZNet.UpdatePlayerList)),
+		};
+		
 		private static void Prefix(ZNet __instance, out Dictionary<long, Vector3> __state)
 		{
 			__state = new Dictionary<long, Vector3>();
@@ -176,9 +183,9 @@ public static class RPC
 		ChatCommands.UpdateAutoCompletion();
 	}
 
-	private static void onChatMessageReceived(long senderId, string name, string message)
+	private static void onChatMessageReceived(long senderId, UserInfo name, string message)
 	{
-		Chat.instance.AddString("<color=orange>" + name + "</color>: <color=#" + ColorUtility.ToHtmlStringRGBA(Groups.groupChatColor.Value) + ">" + message + "</color>");
+		Chat.instance.AddString("<color=orange>" + name.Name + "</color>: <color=#" + ColorUtility.ToHtmlStringRGBA(Groups.groupChatColor.Value) + ">" + message + "</color>");
 		Chat.instance.m_hideTimer = 0f;
 		ZDOID playerZDO = ZNet.instance.m_players.FirstOrDefault(p => p.m_characterID.m_userID == senderId).m_characterID;
 		if (playerZDO != ZDOID.None && ZNetScene.instance.FindInstance(playerZDO) is { } playerObject && playerObject.GetComponent<Player>() is { } player)

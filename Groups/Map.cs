@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using HarmonyLib;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -36,7 +37,7 @@ public static class Map
 
 			GameObject hudBase = ___m_huds[c].m_gui;
 
-			Text playerName = hudBase.transform.Find("Name").GetComponent<Text>();
+			TextMeshProUGUI playerName = hudBase.transform.Find("Name").GetComponent<TextMeshProUGUI>();
 
 			playerName.color = Groups.ownGroup != null && Groups.ownGroup.playerStates.ContainsKey(PlayerReference.fromPlayer(player)) ? Groups.friendlyNameColor.Value : defaultColor;
 		}
@@ -88,11 +89,11 @@ public static class Map
 		}
 	}
 
-	public static void onMapPing(long senderId, Vector3 position, int type, string name, string text)
+	public static void onMapPing(long senderId, Vector3 position, int type, UserInfo name, string text)
 	{
 		Chat.instance.RPC_ChatMessage(senderId, position, type, name, text, PrivilegeManager.GetNetworkUserId());
 		Chat.WorldTextInstance worldText = Chat.instance.FindExistingWorldText(senderId);
-		worldText.m_textField.color = Groups.friendlyNameColor.Value;
+		worldText.m_textMeshField.color = Groups.friendlyNameColor.Value;
 		groupPingTexts.Add(worldText, Array.Empty<object>());
 	}
 
