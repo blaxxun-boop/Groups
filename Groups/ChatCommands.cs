@@ -39,7 +39,7 @@ public static class ChatCommands
 					return;
 				}
 
-				long targetId = ZNet.instance.m_players.FirstOrDefault(p => string.Compare(playerName, p.m_name, StringComparison.OrdinalIgnoreCase) == 0).m_characterID.m_userID;
+				long targetId = ZNet.instance.m_players.FirstOrDefault(p => string.Compare(playerName, p.m_name, StringComparison.OrdinalIgnoreCase) == 0).m_characterID.UserKey;
 				if (targetId == 0)
 				{
 					args.Context.AddString($"{playerName} is not online.");
