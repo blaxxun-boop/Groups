@@ -1,12 +1,14 @@
 ﻿using System.Linq;
+using JetBrains.Annotations;
 
 namespace Groups;
 
+[PublicAPI]
 public struct PlayerReference
 {
-	public static PlayerReference fromPlayerId(long id) => ZNet.instance.m_players.Where(p => p.m_characterID.m_userID == id).Select(fromPlayerInfo).FirstOrDefault();
-	public static PlayerReference fromPlayerInfo(ZNet.PlayerInfo playerInfo) => new() { peerId = playerInfo.m_characterID.m_userID, name = playerInfo.m_name ?? "" };
-	public static PlayerReference fromPlayer(Player player) => player == Player.m_localPlayer ? new PlayerReference { peerId = ZDOMan.instance.GetMyID(), name = Game.instance.GetPlayerProfile().GetName() } : fromPlayerInfo(ZNet.instance.m_players.FirstOrDefault(info => info.m_characterID == player.GetZDOID()));
+	public static PlayerReference fromPlayerId(long id) => ZNet.instance.m_players.Where(p => p.m_characterID.UserID == id).Select(fromPlayerInfo).FirstOrDefault();
+	public static PlayerReference fromPlayerInfo(ZNet.PlayerInfo playerInfo) => new() { peerId = playerInfo.m_characterID.UserID, name = playerInfo.m_name ?? "" };
+	public static PlayerReference fromPlayer(Player player) => player == Player.m_localPlayer ? new PlayerReference { peerId = ZDOMan.GetSessionID(), name = Game.instance.GetPlayerProfile().GetName() } : fromPlayerInfo(ZNet.instance.m_players.FirstOrDefault(info => info.m_characterID == player.GetZDOID()));
 
 	public long peerId;
 	public string name;

@@ -53,7 +53,7 @@ public static class RPC
 			AccessTools.DeclaredMethod(typeof(ZNet), nameof(ZNet.RPC_PlayerList)),
 			AccessTools.DeclaredMethod(typeof(ZNet), nameof(ZNet.UpdatePlayerList)),
 		};
-		
+
 		private static void Prefix(ZNet __instance, out Dictionary<long, Vector3> __state)
 		{
 			__state = new Dictionary<long, Vector3>();
@@ -63,9 +63,9 @@ public static class RPC
 				return;
 			}
 
-			foreach (ZNet.PlayerInfo playerInfo in __instance.m_players.Where(p => Groups.ownGroup.playerStates.ContainsKey(PlayerReference.fromPlayerId(p.m_characterID.m_userID))))
+			foreach (ZNet.PlayerInfo playerInfo in __instance.m_players.Where(p => Groups.ownGroup.playerStates.ContainsKey(PlayerReference.fromPlayerId(p.m_characterID.UserID))))
 			{
-				__state[playerInfo.m_characterID.m_userID] = playerInfo.m_position;
+				__state[playerInfo.m_characterID.UserID] = playerInfo.m_position;
 			}
 		}
 
@@ -95,9 +95,9 @@ public static class RPC
 			{
 				ZNet.PlayerInfo info = playerInfo;
 				characterIdCache.TryGetValue(info.m_host, out PlayerReference player);
-				if (Groups.ownGroup.playerStates.ContainsKey(player!) && player.peerId != ZDOMan.instance.GetMyID())
+				if (Groups.ownGroup.playerStates.ContainsKey(player) && player.peerId != ZDOMan.GetSessionID())
 				{
-					if (__state.TryGetValue(playerInfo.m_characterID.m_userID, out Vector3 position))
+					if (__state.TryGetValue(playerInfo.m_characterID.UserID, out Vector3 position))
 					{
 						if (!playerInfo.m_publicPosition)
 						{
@@ -110,15 +110,15 @@ public static class RPC
 			}
 			__instance.m_players = playerInfos;
 
-			if (Groups.ownGroup.leader.peerId != ZDOMan.instance.GetMyID())
+			if (Groups.ownGroup.leader.peerId != ZDOMan.GetSessionID())
 			{
 				bool leaderIsOnline = characterIdCache.ContainsValue(Groups.ownGroup.leader);
-				if (leaderIsOnline || Groups.ownGroup.playerStates.Keys.OrderBy(p => p.peerId).First(characterIdCache.Values.Contains).peerId != ZDOMan.instance.GetMyID())
+				if (leaderIsOnline || Groups.ownGroup.playerStates.Keys.OrderBy(p => p.peerId).First(characterIdCache.Values.Contains).peerId != ZDOMan.GetSessionID())
 				{
 					return;
 				}
 
-				Groups.ownGroup.PromoteMember(PlayerReference.fromPlayerId(ZDOMan.instance.GetMyID()));
+				Groups.ownGroup.PromoteMember(PlayerReference.fromPlayerId(ZDOMan.GetSessionID()));
 			}
 
 			foreach (PlayerReference player in Groups.ownGroup.playerStates.Keys.Except(characterIdCache.Values).ToArray())
@@ -187,7 +187,7 @@ public static class RPC
 	{
 		Chat.instance.AddString("<color=orange>" + name.Name + "</color>: <color=#" + ColorUtility.ToHtmlStringRGBA(Groups.groupChatColor.Value) + ">" + message + "</color>");
 		Chat.instance.m_hideTimer = 0f;
-		ZDOID playerZDO = ZNet.instance.m_players.FirstOrDefault(p => p.m_characterID.m_userID == senderId).m_characterID;
+		ZDOID playerZDO = ZNet.instance.m_players.FirstOrDefault(p => p.m_characterID.UserID == senderId).m_characterID;
 		if (playerZDO != ZDOID.None && ZNetScene.instance.FindInstance(playerZDO) is { } playerObject && playerObject.GetComponent<Player>() is { } player)
 		{
 			if (Minimap.instance && Player.m_localPlayer && Minimap.instance.m_mode == Minimap.MapMode.None && Vector3.Distance(Player.m_localPlayer.transform.position, player.GetHeadPoint()) > Minimap.instance.m_nomapPingDistance)
@@ -213,7 +213,7 @@ public static class RPC
 
 		if (Groups.blockInvitations.Value == Groups.BlockInvitation.Enemy)
 		{
-			if (Player.m_localPlayer?.IsPVPEnabled() == true && Player.m_players.Any(p => p != Player.m_localPlayer && p.IsPVPEnabled() && (Groups.friendlyFire.Value == Groups.Toggle.On || Groups.ownGroup?.playerStates.ContainsKey(PlayerReference.fromPlayer(p)) != true) && Vector3.Distance(Player.m_localPlayer.transform.position, p.transform.position) < 30))
+			if (Player.m_localPlayer?.IsPVPEnabled() == true && Player.s_players.Any(p => p != Player.m_localPlayer && p.IsPVPEnabled() && (Groups.friendlyFire.Value == Groups.Toggle.On || Groups.ownGroup?.playerStates.ContainsKey(PlayerReference.fromPlayer(p)) != true) && Vector3.Distance(Player.m_localPlayer.transform.position, p.transform.position) < 30))
 			{
 				return;
 			}
@@ -223,7 +223,7 @@ public static class RPC
 
 		Interface.groupDialog!.SetActive(true);
 		Interface.groupDialog.transform.Find("dialog/Exit").GetComponent<Text>().text = $"{name} invited you to join their group.";
-		
+
 		API.InvokeInvitationReceived(PlayerReference.fromPlayerId(senderId), Interface.groupDialog);
 	}
 
@@ -303,7 +303,7 @@ public static class RPC
 		foreach (ZNet.PlayerInfo playerInfo in ZNet.instance.m_players)
 		{
 			ZNet.PlayerInfo info = playerInfo;
-			if (info.m_characterID.m_userID == senderId)
+			if (info.m_characterID.UserID == senderId)
 			{
 				info.m_position = position;
 			}

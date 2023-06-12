@@ -160,7 +160,7 @@ public class API
 	{
 		if (playerId == Game.instance.m_playerProfile.GetPlayerID())
 		{
-			return PlayerReference.fromPlayerId(ZDOMan.instance.GetMyID());
+			return PlayerReference.fromPlayerId(ZDOMan.GetSessionID());
 		}
 
 #if ! API

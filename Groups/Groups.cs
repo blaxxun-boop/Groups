@@ -16,7 +16,7 @@ namespace Groups;
 public class Groups : BaseUnityPlugin
 {
 	private const string ModName = "Groups";
-	private const string ModVersion = "1.1.15";
+	private const string ModVersion = "1.1.16";
 	private const string ModGUID = "org.bepinex.plugins.groups";
 
 	public static Group? ownGroup;
@@ -128,7 +128,7 @@ public class Groups : BaseUnityPlugin
 	{
 		if (Player.m_localPlayer is { } player && ownGroup is not null && !ZNet.instance.m_publicReferencePosition)
 		{
-			foreach (PlayerReference reference in ownGroup.playerStates.Keys.Where(r => r.peerId != ZDOMan.instance.GetMyID()))
+			foreach (PlayerReference reference in ownGroup.playerStates.Keys.Where(r => r.peerId != ZDOMan.GetSessionID()))
 			{
 				ZRoutedRpc.instance.InvokeRoutedRPC(reference.peerId, "Groups UpdatePosition", player.transform.position);
 			}
@@ -140,7 +140,7 @@ public class Groups : BaseUnityPlugin
 	{
 		private static bool Prefix(Character __instance, HitData hit)
 		{
-			if (__instance == Player.m_localPlayer && hit.GetAttacker() is Player attacker && hit.m_statusEffect != "Staff_shield")
+			if (__instance == Player.m_localPlayer && hit.GetAttacker() is Player attacker && hit.m_statusEffectHash != "Staff_shield".GetStableHashCode())
 			{
 				if (friendlyFire.Value == Toggle.Off && ownGroup is not null && ownGroup.playerStates.ContainsKey(PlayerReference.fromPlayer(attacker)))
 				{
