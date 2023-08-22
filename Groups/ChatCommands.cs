@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
+using TMPro;
 using UnityEngine.UI;
 
 namespace Groups;
@@ -191,7 +192,7 @@ public static class ChatCommands
 	{
 		private static void Postfix(Chat __instance)
 		{
-			__instance.m_input.transform.Find("Placeholder").GetComponent<Text>().text = groupChatActive ? "Write to group ..." : "Write something ...";
+			__instance.m_input.transform.Find("Text Area/Placeholder").GetComponent<TextMeshProUGUI>().text = groupChatActive ? "Write to group ..." : "Write something ...";
 		}
 	}
 

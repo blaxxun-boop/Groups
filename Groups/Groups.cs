@@ -16,7 +16,7 @@ namespace Groups;
 public class Groups : BaseUnityPlugin
 {
 	private const string ModName = "Groups";
-	private const string ModVersion = "1.1.16";
+	private const string ModVersion = "1.1.17";
 	private const string ModGUID = "org.bepinex.plugins.groups";
 
 	public static Group? ownGroup;
@@ -54,14 +54,14 @@ public class Groups : BaseUnityPlugin
 	public enum Toggle
 	{
 		On = 1,
-		Off = 0
+		Off = 0,
 	}
 
 	public enum GroupLeaderDisplayOption
 	{
 		Disabled,
 		Icon,
-		Color
+		Color,
 	}
 
 	public enum BlockInvitation
@@ -71,7 +71,7 @@ public class Groups : BaseUnityPlugin
 		[Description("While PvP enabled")]
 		PvP,
 		[Description("While Enemy Player Nearby")]
-		Enemy
+		Enemy,
 	}
 
 	private class ConfigurationManagerAttributes

@@ -27,7 +27,7 @@ public class Group
 		this.leader = leader;
 		playerStates = new Dictionary<PlayerReference, PlayerState>
 		{
-			{ leader, playerState }
+			{ leader, playerState },
 		};
 	}
 
