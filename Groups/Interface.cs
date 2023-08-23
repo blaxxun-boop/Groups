@@ -190,7 +190,7 @@ public static class Interface
 		}
 	}
 
-	[HarmonyPatch(typeof(Menu), nameof(Menu.IsVisible))]
+	[HarmonyPatch(typeof(TextInput), nameof(TextInput.IsVisible))]
 	private class DisablePlayerInputInGroupDialog
 	{
 		private static void Postfix(ref bool __result)
