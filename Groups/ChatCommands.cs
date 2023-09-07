@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
 using TMPro;
-using UnityEngine.UI;
 
 namespace Groups;
 
 public static class ChatCommands
 {
-	public static bool groupChatActive = false;
+	private const string groupChatPlaceholder = "Write to group ...";
+	private static bool groupChatActive => Chat.instance && Chat.instance.m_input.transform.Find("Text Area/Placeholder").GetComponent<TextMeshProUGUI>().text == groupChatPlaceholder;
+
 	private static readonly List<Terminal.ConsoleCommand> terminalCommands = new();
 
 	[HarmonyPatch(typeof(Terminal), nameof(Terminal.InitTerminal))]
@@ -173,9 +174,25 @@ public static class ChatCommands
 				}
 				else
 				{
-					groupChatActive = !groupChatActive;
+					ToggleGroupsChat(!groupChatActive);
 				}
 			}));
+		}
+	}
+
+	public static void ToggleGroupsChat(bool active)
+	{
+		if (Chat.instance)
+		{
+			TextMeshProUGUI placeholder = Chat.instance.m_input.transform.Find("Text Area/Placeholder").GetComponent<TextMeshProUGUI>();
+			if (active)
+			{
+				placeholder.text = groupChatPlaceholder;
+			}
+			else if (placeholder.text == groupChatPlaceholder)
+			{
+				placeholder.text = Localization.instance.Localize("$chat_entertext");
+			}
 		}
 	}
 
@@ -186,16 +203,6 @@ public static class ChatCommands
 			command.m_tabOptions = null;
 		}
 	}
-
-	[HarmonyPatch(typeof(Chat), nameof(Chat.Update))]
-	private class PlaceHolder
-	{
-		private static void Postfix(Chat __instance)
-		{
-			__instance.m_input.transform.Find("Text Area/Placeholder").GetComponent<TextMeshProUGUI>().text = groupChatActive ? "Write to group ..." : "Write something ...";
-		}
-	}
-
 
 	[HarmonyPatch(typeof(Chat), nameof(Chat.Awake))]
 	public class AddGroupChat

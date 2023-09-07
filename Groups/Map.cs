@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using HarmonyLib;
+using JetBrains.Annotations;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Groups;
 
@@ -46,7 +47,8 @@ public static class Map
 	[HarmonyPatch(typeof(Chat), nameof(Chat.SendPing))]
 	private static class RestrictPingsToGroupOnModifierHeld
 	{
-		private static void RestrictBroadcast(ZRoutedRpc instance, long targetPeerId, string methodName, params object[] parameters)
+		[UsedImplicitly]
+		private static bool RestrictBroadcast(ZRoutedRpc instance, long targetPeerId, string methodName, params object[] parameters)
 		{
 			if (Groups.ownGroup is not null && targetPeerId == ZRoutedRpc.Everybody && Groups.groupPingHotkey.Value.IsPressed())
 			{
@@ -54,26 +56,34 @@ public static class Map
 				{
 					instance.InvokeRoutedRPC(playerReference.peerId, "Groups MapPing", parameters);
 				}
-				return;
+				return true;
 			}
 
-			instance.InvokeRoutedRPC(targetPeerId, methodName, parameters);
+			return false;
+
 		}
 
-		private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+		private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructionsEnumerable, ILGenerator ilg)
 		{
 			MethodInfo routedRPC = AccessTools.DeclaredMethod(typeof(ZRoutedRpc), nameof(ZRoutedRpc.InvokeRoutedRPC), new[] { typeof(long), typeof(string), typeof(object[]) });
-			foreach (CodeInstruction instruction in instructions)
+			MethodInfo routedRPCInstance = AccessTools.DeclaredPropertyGetter(typeof(ZRoutedRpc), nameof(ZRoutedRpc.instance));
+
+			List<CodeInstruction> instructions = instructionsEnumerable.ToList();
+
+			int methodEndIndex = instructions.FindIndex(i => i.Calls(routedRPC));
+			int methodStartIndex = instructions.FindLastIndex(methodEndIndex, i => i.Calls(routedRPCInstance));
+
+			Label skip = ilg.DefineLabel();
+			instructions[methodEndIndex + 1].labels.Add(skip);
+
+			// Repeat all instructions for method call, then skip original if restricted
+			instructions.InsertRange(methodStartIndex, instructions.Skip(methodStartIndex).Take(methodEndIndex - methodStartIndex).Concat(new[]
 			{
-				if (instruction.opcode == OpCodes.Callvirt && instruction.OperandIs(routedRPC))
-				{
-					yield return new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(typeof(RestrictPingsToGroupOnModifierHeld), nameof(RestrictBroadcast)));
-				}
-				else
-				{
-					yield return instruction;
-				}
-			}
+				new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(typeof(RestrictPingsToGroupOnModifierHeld), nameof(RestrictBroadcast))),
+				new CodeInstruction(OpCodes.Brtrue, skip),
+			}).ToArray());
+
+			return instructions;
 		}
 	}
 
@@ -82,9 +92,21 @@ public static class Map
 	{
 		public static void Prefix(Chat __instance, long sender)
 		{
-			if (__instance.FindExistingWorldText(sender) is { } text)
+			if (__instance.FindExistingWorldText(sender) is { } text && groupPingTexts.Remove(text) && Minimap.instance)
 			{
-				groupPingTexts.Remove(text);
+				for (int i = 0; i < Minimap.instance.m_tempShouts.Count; ++i)
+				{
+					Minimap.PinData pingPin = Minimap.instance.m_pingPins[i];
+					Chat.WorldTextInstance tempShout = Minimap.instance.m_tempShouts[i];
+					if (tempShout == text)
+					{
+						pingPin.m_icon = Minimap.instance.GetSprite(Minimap.PinType.Ping);
+						if (pingPin.m_iconElement)
+						{
+							pingPin.m_iconElement.sprite = pingPin.m_icon;
+						}
+					}
+				}
 			}
 		}
 	}
@@ -135,8 +157,18 @@ public static class Map
 				ZNet.PlayerInfo playerInfo = __instance.m_tempPlayerInfo[index];
 				if (playerPin.m_name == playerInfo.m_name)
 				{
-					playerPin.m_icon = Groups.ownGroup?.playerStates.ContainsKey(PlayerReference.fromPlayerInfo(playerInfo)) == true ? groupMapPlayerIcon : __instance.GetSprite(Minimap.PinType.Player);
-					if (playerPin.m_iconElement)
+					bool changed = false;
+					if (Groups.ownGroup?.playerStates.ContainsKey(PlayerReference.fromPlayerInfo(playerInfo)) == true)
+					{
+						playerPin.m_icon = groupMapPlayerIcon;
+						changed = true;
+					}
+					else if (playerPin.m_icon == groupMapPlayerIcon)
+					{
+						playerPin.m_icon = __instance.GetSprite(Minimap.PinType.Player);
+						changed = true;
+					}
+					if (changed && playerPin.m_iconElement)
 					{
 						playerPin.m_iconElement.sprite = playerPin.m_icon;
 					}
@@ -154,10 +186,13 @@ public static class Map
 			{
 				Minimap.PinData pingPin = __instance.m_pingPins[i];
 				Chat.WorldTextInstance tempShout = __instance.m_tempShouts[i];
-				pingPin.m_icon = groupPingTexts.TryGetValue(tempShout, out _) ? groupMapPingIcon : __instance.GetSprite(Minimap.PinType.Ping);
-				if (pingPin.m_iconElement)
+				if (groupPingTexts.TryGetValue(tempShout, out _))
 				{
-					pingPin.m_iconElement.sprite = pingPin.m_icon;
+					pingPin.m_icon = groupMapPingIcon;
+					if (pingPin.m_iconElement)
+					{
+						pingPin.m_iconElement.sprite = pingPin.m_icon;
+					}
 				}
 			}
 		}

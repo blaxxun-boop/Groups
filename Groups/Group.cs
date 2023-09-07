@@ -133,7 +133,7 @@ public class Group
 	{
 		API.InvokeGroupLeft();
 
-		ChatCommands.groupChatActive = false;
+		ChatCommands.ToggleGroupsChat(false);
 		PlayerReference ownReference = PlayerReference.fromPlayer(Player.m_localPlayer);
 
 		if (leader == ownReference && playerStates.Count > 1)

@@ -144,7 +144,7 @@ public static class RPC
 				{
 					API.InvokeGroupLeft();
 
-					ChatCommands.groupChatActive = false;
+					ChatCommands.ToggleGroupsChat(false);
 					Groups.ownGroup = null;
 				}
 				else
