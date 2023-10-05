@@ -27,7 +27,7 @@ Add the NuGet package ILRepack.Lib.MSBuild.Task to your project. Add a file with
 
 ### Reference Groups
 
-Add a reference to the Groups.dll in your project. Do not add a reference to the GroupsAPI.dll. Then set a *soft* dependency on Groups, to make sure your mod is loaded after Groups, like this:
+Add a reference to the GroupsAPI.dll. Then set a *soft* dependency on Groups, to make sure your mod is loaded after Groups, like this:
 
 `[BepInDependency("org.bepinex.plugins.groups", BepInDependency.DependencyFlags.SoftDependency)]`
 
