@@ -16,7 +16,7 @@ namespace Groups;
 public class Groups : BaseUnityPlugin
 {
 	private const string ModName = "Groups";
-	private const string ModVersion = "1.2.0";
+	private const string ModVersion = "1.2.1";
 	private const string ModGUID = "org.bepinex.plugins.groups";
 
 	public static Group? ownGroup;
@@ -82,6 +82,9 @@ public class Groups : BaseUnityPlugin
 
 	public void Awake()
 	{
+		APIManager.Patcher.Patch();
+		LocalizationManager.Localizer.Load();
+		
 		Assembly? bepinexConfigManager = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == "ConfigurationManager");
 
 		Type? configManagerType = bepinexConfigManager?.GetType("ConfigurationManager.ConfigurationManager");

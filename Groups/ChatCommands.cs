@@ -8,7 +8,7 @@ namespace Groups;
 
 public static class ChatCommands
 {
-	private const string groupChatPlaceholder = "Write to group ...";
+	private static string groupChatPlaceholder = null!;
 	private static bool groupChatActive => Chat.instance && Chat.instance.m_input.transform.Find("Text Area/Placeholder").GetComponent<TextMeshProUGUI>().text == groupChatPlaceholder;
 
 	private static readonly List<Terminal.ConsoleCommand> terminalCommands = new();
@@ -18,6 +18,8 @@ public static class ChatCommands
 	{
 		private static void Postfix()
 		{
+			groupChatPlaceholder = Localization.instance.Localize("$groups_chat_placeholder");
+			
 			terminalCommands.Clear();
 
 			terminalCommands.Add(new Terminal.ConsoleCommand("invite", "invite someone to your group", (Terminal.ConsoleEvent)(args =>
@@ -29,7 +31,7 @@ public static class ChatCommands
 
 				if (Player.m_localPlayer?.m_nview.GetZDO().GetBool("dead") != false)
 				{
-					args.Context.AddString("You are dead.");
+					args.Context.AddString(Localization.instance.Localize("$groups_dead"));
 					return;
 				}
 
@@ -37,14 +39,14 @@ public static class ChatCommands
 
 				if (string.Compare(playerName, Player.m_localPlayer.GetHoverName(), StringComparison.OrdinalIgnoreCase) == 0)
 				{
-					args.Context.AddString("You cannot invite yourself.");
+					args.Context.AddString(Localization.instance.Localize("$groups_cannot_invite_self"));
 					return;
 				}
 
 				long targetId = ZNet.instance.m_players.FirstOrDefault(p => string.Compare(playerName, p.m_name, StringComparison.OrdinalIgnoreCase) == 0).m_characterID.UserID;
 				if (targetId == 0)
 				{
-					args.Context.AddString($"{playerName} is not online.");
+					args.Context.AddString(Localization.instance.Localize("$groups_player_not_online", playerName));
 					return;
 				}
 
@@ -57,11 +59,11 @@ public static class ChatCommands
 				if (Groups.ownGroup.leader == PlayerReference.fromPlayer(Player.m_localPlayer))
 				{
 					ZRoutedRpc.instance.InvokeRoutedRPC(targetId, "Groups InvitePlayer", Player.m_localPlayer.GetHoverName());
-					args.Context.AddString($"Sent an invitation to {playerName}.");
+					args.Context.AddString(Localization.instance.Localize("$groups_invitation_sent", playerName));
 				}
 				else
 				{
-					args.Context.AddString("Only the leader of a group can send out invitations.");
+					args.Context.AddString(Localization.instance.Localize("$groups_leader_can_invite"));
 				}
 			}), optionsFetcher: () => ZNet.instance.m_players.Select(p => p.m_name).ToList()));
 
@@ -74,14 +76,14 @@ public static class ChatCommands
 
 				if (Groups.ownGroup is null)
 				{
-					args.Context.AddString("You are not in a group.");
+					args.Context.AddString(Localization.instance.Localize("$groups_not_in_group"));
 
 					return;
 				}
 
 				if (Groups.ownGroup.leader != PlayerReference.fromPlayer(Player.m_localPlayer))
 				{
-					args.Context.AddString("Only the leader of a group can remove members.");
+					args.Context.AddString(Localization.instance.Localize("$groups_leader_can_remove"));
 
 					return;
 				}
@@ -90,14 +92,14 @@ public static class ChatCommands
 
 				if (string.Compare(playerName, Player.m_localPlayer.GetHoverName(), StringComparison.OrdinalIgnoreCase) == 0)
 				{
-					args.Context.AddString("You cannot remove yourself. Please use /leave instead.");
+					args.Context.AddString(Localization.instance.Localize("$groups_removed_self"));
 
 					return;
 				}
 
 				if (!Groups.ownGroup.RemoveMember(Groups.ownGroup.playerStates.Keys.FirstOrDefault(p => string.Compare(p.name, playerName, StringComparison.OrdinalIgnoreCase) == 0)))
 				{
-					args.Context.AddString($"{playerName} is not in this group.");
+					args.Context.AddString(Localization.instance.Localize("$groups_target_not_in_group", playerName));
 				}
 
 			}), optionsFetcher: () => Groups.ownGroup?.playerStates.Keys.Select(p => p.name).Where(n => n != Player.m_localPlayer.GetHoverName()).ToList() ?? new List<string>()));
@@ -111,14 +113,14 @@ public static class ChatCommands
 
 				if (Groups.ownGroup is null)
 				{
-					args.Context.AddString("You are not in a group.");
+					args.Context.AddString(Localization.instance.Localize("$groups_not_in_group"));
 
 					return;
 				}
 
 				if (Groups.ownGroup.leader != PlayerReference.fromPlayer(Player.m_localPlayer))
 				{
-					args.Context.AddString("Only the leader of a group can promote someone.");
+					args.Context.AddString(Localization.instance.Localize("$groups_leader_can_promote"));
 
 					return;
 				}
@@ -127,7 +129,7 @@ public static class ChatCommands
 
 				if (!Groups.ownGroup.PromoteMember(Groups.ownGroup.playerStates.Keys.FirstOrDefault(p => string.Compare(p.name, playerName, StringComparison.OrdinalIgnoreCase) == 0)))
 				{
-					args.Context.AddString($"{playerName} is not in this group.");
+					args.Context.AddString(Localization.instance.Localize("$groups_target_not_in_group", playerName));
 				}
 
 			}), optionsFetcher: () => Groups.ownGroup?.playerStates.Keys.Select(p => p.name).Where(n => n != Player.m_localPlayer.GetHoverName()).ToList() ?? new List<string>()));
@@ -141,7 +143,7 @@ public static class ChatCommands
 
 				if (Groups.ownGroup is null)
 				{
-					args.Context.AddString("You are not in a group.");
+					args.Context.AddString(Localization.instance.Localize("$groups_not_in_group"));
 
 					return;
 				}
@@ -158,7 +160,7 @@ public static class ChatCommands
 
 				if (Groups.ownGroup is null)
 				{
-					args.Context.AddString("You are not in a group.");
+					args.Context.AddString(Localization.instance.Localize("$groups_not_in_group"));
 
 					return;
 				}
@@ -210,8 +212,8 @@ public static class ChatCommands
 		private static void Postfix(Chat __instance)
 		{
 			int insertIndex = Math.Max(0, __instance.m_chatBuffer.Count - 5);
-			__instance.m_chatBuffer.Insert(insertIndex, "/p [text] Group chat");
-			__instance.m_chatBuffer.Insert(insertIndex, "/p Toggle group chat");
+			__instance.m_chatBuffer.Insert(insertIndex,Localization.instance.Localize("$groups_group_chat_message_hint"));
+			__instance.m_chatBuffer.Insert(insertIndex, Localization.instance.Localize("$groups_group_chat_toggle_hint"));
 			__instance.UpdateChat();
 		}
 	}

@@ -76,7 +76,7 @@ public class Group
 				playerState.write(state);
 				ZRoutedRpc.instance.InvokeRoutedRPC(p.peerId, "Groups AddMember", player.ToString(), state);
 			}
-			ZRoutedRpc.instance.InvokeRoutedRPC(p.peerId, "Groups AddMessage", $"{player.name} has joined the group.");
+			ZRoutedRpc.instance.InvokeRoutedRPC(p.peerId, "Groups AddMessage", Localization.instance.Localize("$groups_player_joined", player.name));
 		}
 		return true;
 	}
@@ -90,13 +90,14 @@ public class Group
 				ZRoutedRpc.instance.InvokeRoutedRPC(p.peerId, "Groups UpdateGroup", player.ToString(), "Member Removed");
 				if (p != player)
 				{
-					ZRoutedRpc.instance.InvokeRoutedRPC(p.peerId, "Groups AddMessage", $"{player.name} has {(self ? "left" : "been removed from")} the group.");
+					string message = Localization.instance.Localize(self ? "$groups_player_left" : "$groups_player_removed", player.name);
+					ZRoutedRpc.instance.InvokeRoutedRPC(p.peerId, "Groups AddMessage", message);
 				}
 			}
 
 			if (!self)
 			{
-				ZRoutedRpc.instance.InvokeRoutedRPC(player.peerId, "Groups AddMessage", "You have been removed from the group.");
+				ZRoutedRpc.instance.InvokeRoutedRPC(player.peerId, "Groups AddMessage", Localization.instance.Localize("$groups_self_removed"));
 			}
 
 			return true;
@@ -120,7 +121,7 @@ public class Group
 				{
 					ZRoutedRpc.instance.InvokeRoutedRPC(p.peerId, "Groups UpdateGroup", player.ToString(), "Member Promoted");
 				}
-				ZRoutedRpc.instance.InvokeRoutedRPC(p.peerId, "Groups AddMessage", $"{player.name} is now the leader of the group.");
+				ZRoutedRpc.instance.InvokeRoutedRPC(p.peerId, "Groups AddMessage", Localization.instance.Localize("$groups_player_promoted", player.name));
 			}
 			leader = player;
 			return true;

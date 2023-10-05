@@ -221,31 +221,23 @@ public static class RPC
 
 		pendingInvitationSenderId = senderId;
 
-		Interface.groupDialog!.SetActive(true);
-		Interface.groupDialog.transform.Find("dialog/Exit").GetComponent<Text>().text = $"{name} invited you to join their group.";
+		UnifiedPopup.Push(new YesNoPopup("$groups_invitation_received_title", Localization.instance.Localize("$groups_invitation_received_description", name), () =>
+		{
+			Groups.ownGroup?.Leave();
 
-		API.InvokeInvitationReceived(PlayerReference.fromPlayerId(senderId), Interface.groupDialog);
+			UnifiedPopup.Pop();
+
+			ZPackage playerState = new();
+			Group.PlayerState.fromLocal().write(playerState);
+			ZRoutedRpc.instance.InvokeRoutedRPC(pendingInvitationSenderId, "Groups AcceptInvitation", playerState);
+		}, UnifiedPopup.Pop));
+
+		API.InvokeInvitationReceived(PlayerReference.fromPlayerId(senderId), UnifiedPopup.instance.popupUIParent);
 	}
 
 	private static void onForcedInvitationReceived(long senderId)
 	{
 		API.JoinGroup(PlayerReference.fromPlayerId(senderId));
-	}
-
-	public static void onDeclineInvitation()
-	{
-		Interface.groupDialog!.SetActive(false);
-	}
-
-	public static void onAcceptInvitation()
-	{
-		Groups.ownGroup?.Leave();
-
-		Interface.groupDialog!.SetActive(false);
-
-		ZPackage playerState = new();
-		Group.PlayerState.fromLocal().write(playerState);
-		ZRoutedRpc.instance.InvokeRoutedRPC(pendingInvitationSenderId, "Groups AcceptInvitation", playerState);
 	}
 
 	private static void onInvitationAccepted(long senderId, ZPackage playerState)
@@ -278,7 +270,7 @@ public static class RPC
 	{
 		if (group.Size() == 0)
 		{
-			Chat.instance.AddString("Joining the group failed. Maybe it's full or doesn't exist anymore.");
+			Chat.instance.AddString(Localization.instance.Localize("$groups_joining_failed"));
 
 			return;
 		}
