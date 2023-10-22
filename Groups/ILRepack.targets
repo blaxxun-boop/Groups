@@ -3,9 +3,9 @@
     <Target Name="ILRepacker" AfterTargets="Build" Condition=" '$(Configuration)|$(Platform)' != 'API|AnyCPU' ">
         <ItemGroup>
             <InputAssemblies Include="$(TargetPath)"/>
-            <InputAssemblies Include="$(OutputPath)ServerSync.dll"/>
-            <InputAssemblies Include="$(OutputPath)APIManager.dll"/>
-            <InputAssemblies Include="$(OutputPath)LocalizationManager.dll"/>
+            <InputAssemblies Include="$(OutputPath)Libs\ServerSync.dll"/>
+            <InputAssemblies Include="$(OutputPath)Libs\APIManager.dll"/>
+            <InputAssemblies Include="$(OutputPath)Libs\LocalizationManager.dll"/>
         </ItemGroup>
         <ILRepack Parallel="true" DebugInfo="true" Internalize="true" InputAssemblies="@(InputAssemblies)" OutputFile="$(TargetPath)" TargetKind="SameAsPrimaryAssembly" LibraryPath="$(OutputPath)"/>
     </Target>

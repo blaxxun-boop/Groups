@@ -190,10 +190,12 @@ public static class ChatCommands
 			if (active)
 			{
 				placeholder.text = groupChatPlaceholder;
+				Localization.instance.textMeshStrings[placeholder] = groupChatPlaceholder;
 			}
 			else if (placeholder.text == groupChatPlaceholder)
 			{
 				placeholder.text = Localization.instance.Localize("$chat_entertext");
+				Localization.instance.textMeshStrings[placeholder] = "$chat_entertext";
 			}
 		}
 	}
