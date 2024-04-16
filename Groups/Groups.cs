@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
@@ -16,7 +18,7 @@ namespace Groups;
 public class Groups : BaseUnityPlugin
 {
 	private const string ModName = "Groups";
-	private const string ModVersion = "1.2.6";
+	private const string ModVersion = "1.2.7";
 	private const string ModGUID = "org.bepinex.plugins.groups";
 
 	public static Group? ownGroup;
@@ -84,7 +86,7 @@ public class Groups : BaseUnityPlugin
 	{
 		APIManager.Patcher.Patch();
 		LocalizationManager.Localizer.Load();
-		
+
 		Assembly? bepinexConfigManager = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == "ConfigurationManager");
 
 		Type? configManagerType = bepinexConfigManager?.GetType("ConfigurationManager.ConfigurationManager");
@@ -138,12 +140,49 @@ public class Groups : BaseUnityPlugin
 		}
 	}
 
+	private const short IsFriendlyAoe = -23749;
+
+	[HarmonyPatch(typeof(Aoe), nameof(Aoe.OnHit))]
+	private static class TagFriendlyFireAoe
+	{
+		private static HitData CheckAndTag(HitData hit, Aoe aoe)
+		{
+			if (aoe.m_hitFriendly && Projectile.FindHitObject(hit.m_hitCollider).GetComponent<Player>())
+			{
+				hit.m_weakSpot = IsFriendlyAoe;
+			}
+			return hit;
+		}
+
+		private static readonly MethodInfo ModifyHit = AccessTools.DeclaredMethod(typeof(HitData.DamageTypes), nameof(HitData.DamageTypes.Modify));
+		private static readonly MethodInfo Damage = AccessTools.DeclaredMethod(typeof(IDestructible), nameof(IDestructible.Damage));
+
+		private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+		{
+			bool preDamage = false;
+			foreach (CodeInstruction instruction in instructions)
+			{
+				if (preDamage && instruction.Calls(Damage))
+				{
+					preDamage = false;
+					yield return new CodeInstruction(OpCodes.Ldarg_0);
+					yield return new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(typeof(TagFriendlyFireAoe), nameof(CheckAndTag)));
+				}
+				else if (instruction.Calls(ModifyHit))
+				{
+					preDamage = true;
+				}
+				yield return instruction;
+			}
+		}
+	}
+
 	[HarmonyPatch(typeof(Character), nameof(Character.RPC_Damage))]
 	public class FriendlyFirePatch
 	{
 		private static bool Prefix(Character __instance, HitData hit)
 		{
-			if (__instance == Player.m_localPlayer && hit.GetAttacker() is Player attacker && hit.m_statusEffectHash != "Staff_shield".GetStableHashCode())
+			if (__instance == Player.m_localPlayer && hit.GetAttacker() is Player attacker && hit.m_weakSpot != IsFriendlyAoe)
 			{
 				if (friendlyFire.Value == Toggle.Off && ownGroup is not null && ownGroup.playerStates.ContainsKey(PlayerReference.fromPlayer(attacker)))
 				{
@@ -152,6 +191,35 @@ public class Groups : BaseUnityPlugin
 			}
 
 			return true;
+		}
+	}
+
+	[HarmonyPatch(typeof(Character), nameof(Character.Damage))]
+	private static class PreventFriendlyFireMarkerOverwrite
+	{
+		private static void WriteWeakSpot(HitData hit, short index)
+		{
+			if (hit.m_weakSpot >= -1)
+			{
+				hit.m_weakSpot = index;
+			}
+		}
+
+		private static readonly FieldInfo weakSpotField = AccessTools.DeclaredField(typeof(HitData), nameof(HitData.m_weakSpot));
+
+		private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+		{
+			foreach (CodeInstruction instruction in instructions)
+			{
+				if (instruction.StoresField(weakSpotField))
+				{
+					yield return new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(typeof(PreventFriendlyFireMarkerOverwrite), nameof(WriteWeakSpot)));
+				}
+				else
+				{
+					yield return instruction;
+				}
+			}
 		}
 	}
 
