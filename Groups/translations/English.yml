@@ -1,5 +1,6 @@
 groups_invitation_received_title: "Group Invitation Received"
 groups_invitation_received_description: "$1 invited you to join their group."
+groups_invitation_denied_in_combat: "$1 is in combat. Invitation denied."
 groups_joining_failed: "Joining the group failed. Maybe it's full or doesn't exist anymore."
 groups_dead: "You are dead."
 groups_cannot_invite_self: "You cannot invite yourself."

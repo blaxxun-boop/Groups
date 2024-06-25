@@ -26,6 +26,7 @@ public static class RPC
 			ZRoutedRpc.instance.Register<UserInfo, string>("Groups ChatMessage", onChatMessageReceived);
 			ZRoutedRpc.instance.Register<string>("Groups InvitePlayer", onInvitationReceived);
 			ZRoutedRpc.instance.Register("Groups ForcedInvitation", onForcedInvitationReceived);
+			ZRoutedRpc.instance.Register<string>("Groups CombatNotification", onCombatNotificationReceived);
 			ZRoutedRpc.instance.Register<ZPackage>("Groups AcceptInvitation", onInvitationAccepted);
 			ZRoutedRpc.instance.Register<ZPackage>("Groups AcceptInvitationResponse", onInvitationAcceptedResponse);
 			ZRoutedRpc.instance.Register<string, string>("Groups UpdateGroup", onUpdateGroup);
@@ -218,6 +219,13 @@ public static class RPC
 				return;
 			}
 		}
+		
+		if (IsPlayerInCombat(Player.m_localPlayer))
+		{
+			ZRoutedRpc.instance.InvokeRoutedRPC(senderId, "Groups CombatNotification", Player.m_localPlayer?.GetHoverName());
+			return;
+		}
+
 
 		pendingInvitationSenderId = senderId;
 
@@ -238,6 +246,11 @@ public static class RPC
 	private static void onForcedInvitationReceived(long senderId)
 	{
 		API.JoinGroup(PlayerReference.fromPlayerId(senderId));
+	}
+
+	private static void onCombatNotificationReceived(long senderId, string playerName)
+	{
+		Chat.instance.AddString(Localization.instance.Localize("$groups_invitation_denied_in_combat", playerName));
 	}
 
 	private static void onInvitationAccepted(long senderId, ZPackage playerState)
@@ -303,4 +316,12 @@ public static class RPC
 		}
 		ZNet.instance.m_players = playerInfos;
 	}
+
+	private static bool IsPlayerInCombat(Player? player)
+	{
+		List<Character> characters = [];
+		if (player != null) Character.GetCharactersInRange(player.transform.position, 20f, characters);
+		return characters.Any(character => character != null && character.GetComponent<MonsterAI>()?.IsAlerted() == true);
+	}
+
 }
