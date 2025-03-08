@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
+using Splatform;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Groups;
 
 public static class RPC
 {
 	private static long pendingInvitationSenderId;
-	private static readonly Dictionary<string, PlayerReference> characterIdCache = new();
+	private static readonly Dictionary<PlatformUserID, PlayerReference> characterIdCache = new();
 
 	[HarmonyPatch(typeof(Game), nameof(Game.Start))]
 	private class AddRPCs
@@ -75,10 +75,10 @@ public static class RPC
 			{
 				if (player.m_characterID != ZDOID.None)
 				{
-					characterIdCache[player.m_host] = PlayerReference.fromPlayerInfo(player);
+					characterIdCache[player.m_userInfo.m_id] = PlayerReference.fromPlayerInfo(player);
 				}
 			}
-			foreach (string key in characterIdCache.Keys.Where(host => __instance.m_players.All(p => p.m_host != host)).ToArray())
+			foreach (PlatformUserID key in characterIdCache.Keys.Where(host => __instance.m_players.All(p => p.m_userInfo.m_id != host)).ToArray())
 			{
 				characterIdCache.Remove(key);
 			}
@@ -94,7 +94,7 @@ public static class RPC
 			foreach (ZNet.PlayerInfo playerInfo in __instance.m_players)
 			{
 				ZNet.PlayerInfo info = playerInfo;
-				characterIdCache.TryGetValue(info.m_host, out PlayerReference player);
+				characterIdCache.TryGetValue(info.m_userInfo.m_id, out PlayerReference player);
 				if (Groups.ownGroup.playerStates.ContainsKey(player) && player.peerId != ZDOMan.GetSessionID())
 				{
 					if (__state.TryGetValue(playerInfo.m_characterID.UserID, out Vector3 position))
