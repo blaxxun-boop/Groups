@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Groups")]
-[assembly: AssemblyDescription("https://valheim.thunderstore.io/package/Smoothbrain/Groups")]
+[assembly: AssemblyDescription("https://valheim.hexium.gg/mods/Smoothbrain/Groups")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Groups")]
